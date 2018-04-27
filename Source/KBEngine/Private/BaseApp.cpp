@@ -707,14 +707,17 @@ namespace KBEngine
 
 		while (stream.Length() > 0)
 		{
+			uint16 componentType = 0;
 			uint16 utype = 0;
 
 			if (sm->UsePropertyDescrAlias())
 			{
+				componentType = stream.ReadUint8();
 				utype = stream.ReadUint8();
 			}
 			else
 			{
+				componentType = stream.ReadUint16();
 				utype = stream.ReadUint16();
 			}
 
@@ -795,10 +798,17 @@ namespace KBEngine
 			return;
 		}
 
+		uint16 componentType = 0;
 		if (module->UseMethodDescrAlias())
+		{
+			componentType = stream.ReadUint8();
 			methodUtype = stream.ReadUint8();
+		}
 		else
+		{
+			componentType = stream.ReadUint16();
 			methodUtype = stream.ReadUint16();
+		}
 
 		Method* methoddata = module->GetMethod(methodUtype);
 

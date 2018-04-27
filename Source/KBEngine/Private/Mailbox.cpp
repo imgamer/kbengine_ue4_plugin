@@ -28,6 +28,7 @@ namespace KBEngine
 			bundle_->NewMessage(KBEngineApp::app->pBaseApp()->pMessages()->GetMessage("Entity_onRemoteMethodCall"));
 
 		bundle_->WriteInt32(id_);
+		bundle_->WriteInt16(0);
 
 		return bundle_;
 	}
