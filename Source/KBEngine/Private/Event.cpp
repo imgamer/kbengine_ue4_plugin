@@ -17,8 +17,16 @@ namespace KBEngine
 
 	void Event::Clear()
 	{
-		for (auto it : events_)
+		for (auto it : events_) 
+		{
+			EventFuncArray lst = *(it.Value);
+			for (int i = 0; i < lst.Num(); i++)
+			{
+				delete lst[i];
+			}
+
 			delete it.Value;
+		}
 
 		events_.Empty();
 		firedEvents_.Empty();
@@ -44,7 +52,7 @@ namespace KBEngine
 		MonitorExit(cs_events_);
 	}
 
-	void Event::AddEvent(const FString& eventName, EventPair eventPair)
+	void Event::AddEvent(const FString& eventName, EventPair* eventPair)
 	{
 		MonitorEnter(cs_events_);
 		EventFuncArray** p = events_.Find(eventName);
@@ -82,8 +90,8 @@ namespace KBEngine
 		for (int j = 0; j < lst.Num(); j++)
 		{
 			auto pair = lst[j];
-			if (pair.func)
-				pair.func(args);
+			if (pair->func)
+				pair->func(args);
 		}
 	}
 
@@ -126,18 +134,18 @@ namespace KBEngine
 			for (int j = 0; j < lst.Num(); j++)
 			{
 				auto pair = lst[j];
-				if (pair.func)
-					pair.func(eobj.args);
+				if (pair->func)
+					pair->func(eobj.args);
 			}
 		}
 	}
 
 	bool Event::Register(const FString& eventName, EventFuncPtr func)
 	{
-		EventPair pair;
-		pair.objAddr = nullptr;
-		pair.funcAddr = (void *)func;
-		pair.func = EventFunc(func);
+		EventPair* pair = new EventPair();
+		pair->objAddr = nullptr;
+		pair->funcAddr = (void *)func;
+		pair->func = EventFunc(func);
 
 		AddEvent(eventName, pair);
 		return true;
@@ -159,9 +167,10 @@ namespace KBEngine
 		for (int i = 0; i < lst->Num(); i++)
 		{
 			auto& pair = (*lst)[i];
-			if (pair.objAddr == nullptr && pair.funcAddr == (void *)func)
+			if (pair->objAddr == nullptr && pair->funcAddr == (void *)func)
 			{
 				KBE_DEBUG(TEXT("Event::Deregister: 3 - event(%s:%p:)!"), *eventName, func);
+				delete pair;
 				lst->RemoveAt(i);
 				MonitorExit(cs_events_);
 				return true;

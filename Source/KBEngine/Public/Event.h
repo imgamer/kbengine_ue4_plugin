@@ -25,7 +25,7 @@ namespace KBEngine
 			EventFunc func;
 		}EventPair;
 
-		typedef TArray<EventPair> EventFuncArray;
+		typedef TArray<EventPair*> EventFuncArray;
 
 		typedef struct
 		{
@@ -76,7 +76,7 @@ namespace KBEngine
 		void CopyEvent(EventFuncArray& out, const FString& eventName);
 
 		// 线程安全的插入事件到队列中
-		void AddEvent(const FString& eventName, EventPair eventPair);
+		void AddEvent(const FString& eventName, EventPair* eventPair);
 
 		bool HasRegister(const FString& eventName);
 
@@ -134,9 +134,10 @@ namespace KBEngine
 		for (int i = 0; i < lst->Num(); i++)
 		{
 			auto& pair = (*lst)[i];
-			if ((void *)obj == pair.objAddr && pair.funcAddr == ut.t)
+			if ((void *)obj == pair->objAddr && pair->funcAddr == ut.t)
 			{
 				KBE_DEBUG(TEXT("Event::Deregister: 2 - event(%s:%p:%p)!"), *eventName, obj, ut.t);
+				delete pair;
 				lst->RemoveAt(i);
 				MonitorExit(cs_events_);
 				return true;
@@ -160,9 +161,10 @@ namespace KBEngine
 			for (int i = lst->Num() - 1; i >= 0; i--)
 			{
 				const auto& o = (*lst)[i];
-				if ((void *)obj == o.objAddr)
+				if ((void *)obj == o->objAddr)
 				{
-					KBE_DEBUG(TEXT("Event::Deregister: 1 - event(%s:%p)!"), *it.Key, o.objAddr);
+					KBE_DEBUG(TEXT("Event::Deregister: 1 - event(%s:%p)!"), *it.Key, o->objAddr);
+					delete o;
 					lst->RemoveAt(i);
 					count++;
 				}
@@ -185,10 +187,10 @@ namespace KBEngine
 
 		ut.f = func;
 
-		EventPair pair;
-		pair.objAddr = (void *)obj;
-		pair.funcAddr = ut.t;
-		pair.func = std::bind(func, obj, std::placeholders::_1);
+		EventPair* pair = new EventPair();
+		pair->objAddr = (void *)obj;
+		pair->funcAddr = ut.t;
+		pair->func = std::bind(func, obj, std::placeholders::_1);
 
 		AddEvent(eventName, pair);
 		return true;
