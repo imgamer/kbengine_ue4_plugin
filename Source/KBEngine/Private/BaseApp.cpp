@@ -150,6 +150,40 @@ namespace KBEngine
 		spaceID_ = 0;
 	}
 
+	bool BaseApp::NeedAdditionalUpdate(Entity *entity)
+	{
+		if (entity->Parent() != nullptr)
+		{
+			if (this->additionalUpdateCount_ > 0)
+			{
+				this->additionalUpdateCount_--;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	void BaseApp::ResetAdditionalUpdateCount()
+	{
+		this->additionalUpdateCount_ = BaseApp::ADDITIONAL_UPDATE_COUNT;
+	}
+
+	bool BaseApp::PlayerNeedUpdate(Entity *entity, bool moveChanged)
+	{
+		bool needUpdate = true;
+		if (moveChanged)
+		{
+			this->ResetAdditionalUpdateCount();
+		}
+		else
+		{
+			needUpdate = NeedAdditionalUpdate(entity);
+		}
+
+		return needUpdate;
+	}
+
 	void BaseApp::UpdatePlayerToServer()
 	{
 		if (!app_->SyncPlayer() || spaceID_ == 0)
@@ -173,35 +207,87 @@ namespace KBEngine
 		// 开始更新玩家自己的坐标信息
 		if (!playerEntity->IsControlled())
 		{
-
 			const FVector &position = playerEntity->Position();
 			const FVector &direction = playerEntity->Direction();
 
-			bool posHasChanged = FVector::Dist(playerEntity->lastSyncPos_, position) > 0.1f;
-			bool dirHasChanged = FVector::Dist(playerEntity->lastSyncDir_, direction) > 0.1f;
+			bool posHasChanged;
+			bool dirHasChanged;
+			bool needUpdate;
 
-			if (posHasChanged || dirHasChanged)
+			//有parent，则依据local位置（或朝向）是否改变来决定要不要同步，并且将local坐标和世界坐标都传给服务器
+			if (playerEntity->Parent() != nullptr)
 			{
-				playerEntity->lastSyncPos_ = position;
-				playerEntity->lastSyncDir_ = direction;
+				const FVector &localPosition = playerEntity->localPosition_;
+				const FVector &localDirection = playerEntity->localDirection_;
 
-				auto pos = KBEMath::Unreal2KBEnginePosition(position);
+				posHasChanged = FVector::Dist(playerEntity->lastSyncLocalPos_, localPosition) > 0.1f;
+				dirHasChanged = FVector::Dist(playerEntity->lastSyncLocalDir_, localDirection) > 0.1f;
+				needUpdate = this->PlayerNeedUpdate(playerEntity, posHasChanged || dirHasChanged);
+				if (needUpdate)
+				{
+					playerEntity->lastSyncLocalPos_ = localPosition;
+					playerEntity->lastSyncLocalDir_ = localDirection;
+					playerEntity->lastSyncPos_ = position;
+					playerEntity->lastSyncDir_ = direction;
 
-				Bundle* bundle = new Bundle();
-				bundle->NewMessage(messages_->GetMessage("Baseapp_onUpdateDataFromClient"));
-				bundle->WriteFloat(pos.X);
-				bundle->WriteFloat(pos.Y);
-				bundle->WriteFloat(pos.Z);
+					Bundle* bundle = new Bundle();
+					bundle->NewMessage(messages_->GetMessage("Baseapp_onUpdateDataFromClientOnParent"));
+					bundle->WriteInt32(playerEntity->Parent()->ID());
 
-				auto dir = KBEMath::Unreal2KBEngineDirection(direction);
+					auto localPos = KBEMath::Unreal2KBEnginePosition(localPosition);
 
-				bundle->WriteFloat(dir.X);
-				bundle->WriteFloat(dir.Y);
-				bundle->WriteFloat(dir.Z);
-				bundle->WriteUint8((uint8)(playerEntity->IsOnGround() == true ? 1 : 0));
-				bundle->WriteUint32(spaceID_);
-				bundle->Send(networkInterface_);
-				delete bundle;
+					bundle->WriteFloat(localPos.X);
+					bundle->WriteFloat(localPos.Y);
+					bundle->WriteFloat(localPos.Z);
+
+					auto pos = KBEMath::Unreal2KBEnginePosition(position);
+
+					bundle->WriteFloat(pos.X);
+					bundle->WriteFloat(pos.Y);
+					bundle->WriteFloat(pos.Z);
+
+					auto dir = KBEMath::Unreal2KBEngineDirection(direction);
+
+					bundle->WriteFloat(dir.X);
+					bundle->WriteFloat(dir.Y);
+					bundle->WriteFloat(dir.Z);
+					bundle->WriteUint8((uint8)(playerEntity->IsOnGround() == true ? 1 : 0));
+					bundle->WriteUint32(spaceID_);
+					bundle->Send(networkInterface_);
+					delete bundle;
+				}
+
+			}
+
+			// 没有parent，则依据世界位置（或朝向）是否改变来决定要不要同步，并且只传世界坐标给服务器
+			else
+			{
+				posHasChanged = FVector::Dist(playerEntity->lastSyncPos_, position) > 0.1f;
+				dirHasChanged = FVector::Dist(playerEntity->lastSyncDir_, direction) > 0.1f;
+				bool needUpdate = this->PlayerNeedUpdate(playerEntity, posHasChanged || dirHasChanged);
+				if (needUpdate)
+				{
+					playerEntity->lastSyncPos_ = position;
+					playerEntity->lastSyncDir_ = direction;
+
+					auto pos = KBEMath::Unreal2KBEnginePosition(position);
+
+					Bundle* bundle = new Bundle();
+					bundle->NewMessage(messages_->GetMessage("Baseapp_onUpdateDataFromClient"));
+					bundle->WriteFloat(pos.X);
+					bundle->WriteFloat(pos.Y);
+					bundle->WriteFloat(pos.Z);
+
+					auto dir = KBEMath::Unreal2KBEngineDirection(direction);
+
+					bundle->WriteFloat(dir.X);
+					bundle->WriteFloat(dir.Y);
+					bundle->WriteFloat(dir.Z);
+					bundle->WriteUint8((uint8)(playerEntity->IsOnGround() == true ? 1 : 0));
+					bundle->WriteUint32(spaceID_);
+					bundle->Send(networkInterface_);
+					delete bundle;
+				}
 			}
 		}
 
@@ -211,32 +297,86 @@ namespace KBEngine
 			const FVector &position = entity->Position();
 			const FVector &direction = entity->Direction();
 
-			bool posHasChanged = FVector::Dist(entity->lastSyncPos_, position) > 0.1f;
-			bool dirHasChanged = FVector::Dist(entity->lastSyncDir_, direction) > 0.1f;
+			bool posHasChanged;
+			bool dirHasChanged;
+			bool needUpdate;
 
-			if (posHasChanged || dirHasChanged)
+			//有parent，则依据local位置（或朝向）是否改变来决定要不要同步，并且将local坐标和世界坐标都传给服务器
+			if (entity->Parent() != nullptr)
 			{
-				entity->lastSyncPos_ = position;
-				entity->lastSyncDir_ = direction;
+				const FVector &localPosition = entity->localPosition_;
+				const FVector &localDirection = entity->localDirection_;
 
-				auto pos = KBEMath::Unreal2KBEnginePosition(position);
+				posHasChanged = FVector::Dist(entity->lastSyncLocalPos_, localPosition) > 0.1f;
+				dirHasChanged = FVector::Dist(entity->lastSyncLocalDir_, localDirection) > 0.1f;
+				needUpdate = this->PlayerNeedUpdate(entity, posHasChanged || dirHasChanged);
+				if (needUpdate)
+				{
+					entity->lastSyncLocalPos_ = localPosition;
+					entity->lastSyncLocalDir_ = localDirection;
+					entity->lastSyncPos_ = position;
+					entity->lastSyncDir_ = direction;
 
-				Bundle* bundle = new Bundle();
-				bundle->NewMessage(messages_->GetMessage("Baseapp_onUpdateDataFromClientForControlledEntity"));
-				bundle->WriteInt32(entity->ID());
-				bundle->WriteFloat(pos.X);
-				bundle->WriteFloat(pos.Y);
-				bundle->WriteFloat(pos.Z);
+					Bundle* bundle = new Bundle();
+					bundle->NewMessage(messages_->GetMessage("Baseapp_onUpdateDataFromClientForControlledEntityOnParent"));
+					bundle->WriteInt32(entity->ID());
+					bundle->WriteInt32(entity->Parent()->ID());
 
-				auto dir = KBEMath::Unreal2KBEngineDirection(direction);
+					auto localPos = KBEMath::Unreal2KBEnginePosition(localPosition);
 
-				bundle->WriteFloat(dir.X);
-				bundle->WriteFloat(dir.Y);
-				bundle->WriteFloat(dir.Z);
-				bundle->WriteUint8((uint8)(entity->IsOnGround() == true ? 1 : 0));
-				bundle->WriteUint32(spaceID_);
-				bundle->Send(networkInterface_);
-				delete bundle;
+					bundle->WriteFloat(localPos.X);
+					bundle->WriteFloat(localPos.Y);
+					bundle->WriteFloat(localPos.Z);
+
+					auto pos = KBEMath::Unreal2KBEnginePosition(position);
+
+					bundle->WriteFloat(pos.X);
+					bundle->WriteFloat(pos.Y);
+					bundle->WriteFloat(pos.Z);
+
+					auto dir = KBEMath::Unreal2KBEngineDirection(direction);
+
+					bundle->WriteFloat(dir.X);
+					bundle->WriteFloat(dir.Y);
+					bundle->WriteFloat(dir.Z);
+					bundle->WriteUint8((uint8)(entity->IsOnGround() == true ? 1 : 0));
+					bundle->WriteUint32(spaceID_);
+					bundle->Send(networkInterface_);
+					delete bundle;
+				}
+
+			}
+
+			// 没有parent，则依据世界位置（或朝向）是否改变来决定要不要同步，并且只传世界坐标给服务器
+			else
+			{
+				posHasChanged = FVector::Dist(entity->lastSyncPos_, position) > 0.1f;
+				dirHasChanged = FVector::Dist(entity->lastSyncDir_, direction) > 0.1f;
+				bool needUpdate = this->PlayerNeedUpdate(entity, posHasChanged || dirHasChanged);
+				if (needUpdate)
+				{
+					entity->lastSyncPos_ = position;
+					entity->lastSyncDir_ = direction;
+
+					auto pos = KBEMath::Unreal2KBEnginePosition(position);
+
+					Bundle* bundle = new Bundle();
+					bundle->NewMessage(messages_->GetMessage("Baseapp_onUpdateDataFromClientForControlledEntity"));
+					bundle->WriteInt32(entity->ID());
+					bundle->WriteFloat(pos.X);
+					bundle->WriteFloat(pos.Y);
+					bundle->WriteFloat(pos.Z);
+
+					auto dir = KBEMath::Unreal2KBEngineDirection(direction);
+
+					bundle->WriteFloat(dir.X);
+					bundle->WriteFloat(dir.Y);
+					bundle->WriteFloat(dir.Z);
+					bundle->WriteUint8((uint8)(entity->IsOnGround() == true ? 1 : 0));
+					bundle->WriteUint32(spaceID_);
+					bundle->Send(networkInterface_);
+					delete bundle;
+				}
 			}
 		}
 	}

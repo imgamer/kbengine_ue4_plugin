@@ -14,6 +14,8 @@ namespace KBEngine
 
 	class KBENGINE_API BaseApp : public MessagesHandler
 	{
+		const static int ADDITIONAL_UPDATE_COUNT = 8;
+
 	public:
 		/* 连接回调函数
 		int的参数表示错误码，更多的信息可以参考KBEngineApp::serverErrs_
@@ -61,7 +63,7 @@ namespace KBEngine
 		const TMap<int32, Entity*>* Entities() { return &entities_; }
 
 		// 根据Key取相应的SpaceData
-		const FString& BaseApp::GetSpaceData(const FString& key);
+		const FString& GetSpaceData(const FString& key);
 
 		// 处理来自服务器的消息
 		virtual void HandleMessage(const FString &name, MemoryStream *stream) override;
@@ -183,6 +185,9 @@ namespace KBEngine
 		// 服务器通知客户端：某个entity的parent改变了
 		void Client_onParentChanged(int32 eid, int32 parentID);
 
+		bool NeedAdditionalUpdate(Entity *entity);
+		void ResetAdditionalUpdateCount();
+		bool PlayerNeedUpdate(Entity *entity, bool moveChanged);
 
 	private:
 		KBEngineApp* app_ = nullptr;
@@ -239,6 +244,9 @@ namespace KBEngine
 
 		// 最后一次同步坐标、朝向给服务器的时间，用于控制同步频率
 		FDateTime lastUpdateToServerTime_ = FDateTime::UtcNow();
+		
+		// 玩家停止移动后，额外向服务端同步位置朝向的次数
+		uint8 additionalUpdateCount_ = BaseApp::ADDITIONAL_UPDATE_COUNT;
 	};  // end of class BaseApp;
 
 
