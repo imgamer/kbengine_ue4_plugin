@@ -6,7 +6,7 @@
 
 #include "Entity.h"
 #include "EntityDef.h"
-#include "Event.h"
+#include "KBEEvent.h"
 #include "KBEMain.h"
 #include "KBEMath.h"
 #include "KBEngineApp.h"

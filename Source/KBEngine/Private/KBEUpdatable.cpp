@@ -1,5 +1,6 @@
-﻿#include "KBEnginePrivatePCH.h"
-#include "KBEUpdatable.h"
+﻿#include "KBEUpdatable.h"
+#include "KBEnginePrivatePCH.h"
+
 
 namespace KBEngine
 {

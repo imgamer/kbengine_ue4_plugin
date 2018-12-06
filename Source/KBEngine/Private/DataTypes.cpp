@@ -1,5 +1,5 @@
-#include "KBEnginePrivatePCH.h"
 #include "DataTypes.h"
+#include "KBEnginePrivatePCH.h"
 #include "EntityDef.h"
 
 namespace KBEngine
@@ -117,7 +117,7 @@ namespace KBEngine
 			return false;
 		}
 
-		if (v.GetType() != EKBEVariantTypes::VariantArray)
+		if (v.GetType() != static_cast<EVariantTypes>(EKBEVariantTypes::VariantArray))
 		{
 			return false;
 		}
@@ -206,7 +206,7 @@ namespace KBEngine
 	
 	bool KBEDATATYPE_FIXED_DICT::IsSameType(const FVariant &v)
 	{
-		if (v.GetType() != EKBEVariantTypes::VariantMap)
+		if (v.GetType() != static_cast<EVariantTypes>(EKBEVariantTypes::VariantMap))
 			return false;
 
 		const auto data = v.GetValue<FVariantMap>();

@@ -1,6 +1,7 @@
-#include "KBEnginePrivatePCH.h"
 #include "KBEPersonality.h"
 #include "KBEDebug.h"
+#include "KBEnginePrivatePCH.h"
+
 
 namespace KBEngine
 {

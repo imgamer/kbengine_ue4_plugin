@@ -64,33 +64,33 @@ namespace KBEngine
 
 	template<> struct TVariantTraits < FVariantArray >
 	{
-		static int32 GetType()
+		static EVariantTypes GetType()
 		{
-			return EKBEVariantTypes::VariantArray;
+			return static_cast<EVariantTypes>(EKBEVariantTypes::VariantArray);
 		}
 	};
 
 	template<> struct TVariantTraits < FVariantMap >
 	{
-		static int32 GetType()
+		static EVariantTypes GetType()
 		{
-			return EKBEVariantTypes::VariantMap;
+			return static_cast<EVariantTypes>(EKBEVariantTypes::VariantMap);
 		}
 	};
 
 	template<> struct TVariantTraits < MemoryStream * >
 	{
-		static int32 GetType()
+		static EVariantTypes GetType()
 		{
-			return EKBEVariantTypes::MemoryStreamPtr;
+			return static_cast<EVariantTypes>(EKBEVariantTypes::MemoryStreamPtr);
 		}
 	};
 
 	template<> struct TVariantTraits < Entity * >
 	{
-		static int32 GetType()
+		static EVariantTypes GetType()
 		{
-			return EKBEVariantTypes::EntityPtr;
+			return static_cast<EVariantTypes>(EKBEVariantTypes::EntityPtr);
 		}
 	};
 

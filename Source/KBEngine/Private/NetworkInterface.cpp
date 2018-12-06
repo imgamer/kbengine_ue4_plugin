@@ -1,5 +1,5 @@
-#include "KBEnginePrivatePCH.h"
 #include "NetworkInterface.h"
+#include "KBEnginePrivatePCH.h"
 #include "KBEDebug.h"
 #include "KBEPersonality.h"
 #include "PacketReceiver.h"

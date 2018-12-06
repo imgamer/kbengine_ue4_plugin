@@ -1,5 +1,5 @@
-#include "KBEnginePrivatePCH.h"
 #include "MessageReader.h"
+#include "KBEnginePrivatePCH.h"
 #include "MessagesHandler.h"
 
 namespace KBEngine

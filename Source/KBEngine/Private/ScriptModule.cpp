@@ -1,5 +1,5 @@
-#include "KBEnginePrivatePCH.h"
 #include "ScriptModule.h"
+#include "KBEnginePrivatePCH.h"
 #include "Entity.h"
 #include "MemoryStream.h"
 #include "EntityDef.h"

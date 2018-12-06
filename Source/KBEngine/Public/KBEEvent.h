@@ -6,7 +6,7 @@
 
 namespace KBEngine
 {
-	class KBENGINE_API Event
+	class KBENGINE_API KBEEvent
 	{
 	public:
 		template<typename T>
@@ -34,8 +34,8 @@ namespace KBEngine
 		}EventObj;
 
 	public:
-		Event();
-		~Event();
+		KBEEvent();
+		~KBEEvent();
 
 		void Clear();
 
@@ -63,10 +63,10 @@ namespace KBEngine
 		void ProcessAsyncEvents();
 
 	public:
-		static Event *Instance()
+		static KBEEvent *Instance()
 		{
 			if (!s_event_.Get())
-				s_event_ = TSharedPtr<Event>(new Event());
+				s_event_ = TSharedPtr<KBEEvent>(new KBEEvent());
 			return s_event_.Get(); 
 		}
 
@@ -84,12 +84,12 @@ namespace KBEngine
 		void MonitorExit(FCriticalSection& cs) { cs.Unlock(); }
 
 	private:
-		static TSharedPtr<Event> s_event_;
+		static TSharedPtr<KBEEvent> s_event_;
 
 	private:
 		/* penghuawei: 这很可能是UE4的一个bug
 		   当我们：TMap<FString, EventFuncArray> events_
-		   这样声明的时候，使用Event::Instance()->Register("f1", obj, func)注册一个f1事件时，一切正常，
+		   这样声明的时候，使用KBEEvent::Instance()->Register("f1", obj, func)注册一个f1事件时，一切正常，
 		   但是，当我们再次注册一个f1事件的处理函数时，
 		   如果接着有代码构造了FVariant()实例，则events_["f1"][0].func的地址将变得无效，似乎被释放了，
 		   所以，当Fire("f1")事件时，则会遇到内存访问无效的问题，导致crash。
@@ -110,7 +110,7 @@ namespace KBEngine
 
 
 	template <class T>
-	bool Event::Deregister(const FString& eventName, const T* obj, typename ClassMethon<T>::FuncType func)
+	bool KBEEvent::Deregister(const FString& eventName, const T* obj, typename ClassMethon<T>::FuncType func)
 	{
 		MonitorEnter(cs_events_);
 
@@ -136,7 +136,7 @@ namespace KBEngine
 			auto& pair = (*lst)[i];
 			if ((void *)obj == pair->objAddr && pair->funcAddr == ut.t)
 			{
-				KBE_DEBUG(TEXT("Event::Deregister: 2 - event(%s:%p:%p)!"), *eventName, obj, ut.t);
+				KBE_DEBUG(TEXT("KBEEvent::Deregister: 2 - event(%s:%p:%p)!"), *eventName, obj, ut.t);
 				delete pair;
 				lst->RemoveAt(i);
 				MonitorExit(cs_events_);
@@ -149,7 +149,7 @@ namespace KBEngine
 	}
 
 	template <class T>
-	bool Event::Deregister(const T *obj)
+	bool KBEEvent::Deregister(const T *obj)
 	{
 		int count = 0;
 		MonitorEnter(cs_events_);
@@ -163,7 +163,7 @@ namespace KBEngine
 				const auto& o = (*lst)[i];
 				if ((void *)obj == o->objAddr)
 				{
-					KBE_DEBUG(TEXT("Event::Deregister: 1 - event(%s:%p)!"), *it.Key, o->objAddr);
+					KBE_DEBUG(TEXT("KBEEvent::Deregister: 1 - event(%s:%p)!"), *it.Key, o->objAddr);
 					delete o;
 					lst->RemoveAt(i);
 					count++;
@@ -177,7 +177,7 @@ namespace KBEngine
 	}
 
 	template <class T>
-	bool Event::Register(const FString& eventName, T* obj, typename ClassMethon<T>::FuncType func)
+	bool KBEEvent::Register(const FString& eventName, T* obj, typename ClassMethon<T>::FuncType func)
 	{
 		union
 		{

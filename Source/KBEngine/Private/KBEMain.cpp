@@ -1,9 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+#include "KBEMain.h"
 #include "KBEnginePrivatePCH.h"
 #include "KBEngineArgs.h"
-#include "KBEMain.h"
-#include "Event.h"
+#include "KBEEvent.h"
 
 AKBEMain* AKBEMain::instance = nullptr;
 
@@ -73,7 +72,7 @@ void AKBEMain::KBEUpdate()
 	if (pKBEApp)
 		pKBEApp->Process();
 
-	KBEngine::Event::Instance()->ProcessAsyncEvents();
+	KBEngine::KBEEvent::Instance()->ProcessAsyncEvents();
 }
 
 void AKBEMain::InitKBEngine()
@@ -95,6 +94,6 @@ void AKBEMain::InitKBEngine()
 
 	pKBEApp = new KBEngine::KBEngineApp(args);
 
-	//KBEngine::Event::useSyncMode(!isMultiThreads);
+	//KBEngine::KBEEvent::useSyncMode(!isMultiThreads);
 }
 

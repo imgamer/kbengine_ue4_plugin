@@ -1,5 +1,5 @@
-#include "KBEnginePrivatePCH.h"
 #include "EntityDef.h"
+#include "KBEnginePrivatePCH.h"
 #include "ScriptModule.h"
 
 namespace KBEngine

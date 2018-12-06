@@ -1,7 +1,7 @@
+#include "PacketReceiver.h"
 #include "KBEnginePrivatePCH.h"
 #include "Core.h"
 #include "NetworkInterface.h"
-#include "PacketReceiver.h"
 #include "MessageReader.h"
 #include "AllowWindowsPlatformTypes.h"
 #include "HideWindowsPlatformTypes.h"

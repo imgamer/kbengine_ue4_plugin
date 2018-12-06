@@ -1,5 +1,5 @@
-#include "KBEnginePrivatePCH.h"
 #include "Message.h"
+#include "KBEnginePrivatePCH.h"
 #include "EntityDef.h"
 #include "KBEngineApp.h"
 #include "MessagesHandler.h"

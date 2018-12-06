@@ -1,21 +1,21 @@
+#include "KBEEvent.h"
 #include "KBEnginePrivatePCH.h"
-#include "Event.h"
 
 namespace KBEngine
 {
-	TSharedPtr<Event> Event::s_event_ = nullptr;
+	TSharedPtr<KBEEvent> KBEEvent::s_event_ = nullptr;
 
-	Event::Event()
+	KBEEvent::KBEEvent()
 	{
 	}
 
-	Event::~Event()
+	KBEEvent::~KBEEvent()
 	{
-		KBE_DEBUG(TEXT("Event::~Event()"));
+		KBE_DEBUG(TEXT("KBEEvent::~KBEEvent()"));
 		Clear();
 	}
 
-	void Event::Clear()
+	void KBEEvent::Clear()
 	{
 		for (auto it : events_) 
 		{
@@ -34,7 +34,7 @@ namespace KBEngine
 		isPauseOut_ = false;
 	}
 
-	Event::EventFuncArray* Event::GetEvent(const FString& eventName)
+	KBEEvent::EventFuncArray* KBEEvent::GetEvent(const FString& eventName)
 	{
 		MonitorEnter(cs_events_);
 		auto ent = events_.Find(eventName);
@@ -43,7 +43,7 @@ namespace KBEngine
 		return ent ? *ent : nullptr;
 	}
 
-	void Event::CopyEvent(EventFuncArray& out, const FString& eventName)
+	void KBEEvent::CopyEvent(EventFuncArray& out, const FString& eventName)
 	{
 		MonitorEnter(cs_events_);
 		auto ent = events_.Find(eventName);
@@ -52,7 +52,7 @@ namespace KBEngine
 		MonitorExit(cs_events_);
 	}
 
-	void Event::AddEvent(const FString& eventName, EventPair* eventPair)
+	void KBEEvent::AddEvent(const FString& eventName, EventPair* eventPair)
 	{
 		MonitorEnter(cs_events_);
 		EventFuncArray** p = events_.Find(eventName);
@@ -70,12 +70,12 @@ namespace KBEngine
 		MonitorExit(cs_events_);
 	}
 
-	bool Event::HasRegister(const FString& eventName)
+	bool KBEEvent::HasRegister(const FString& eventName)
 	{
 		return nullptr != GetEvent(eventName);
 	}
 
-	void Event::Fire(const FString& eventName, const FVariantArray &args)
+	void KBEEvent::Fire(const FString& eventName, const FVariantArray &args)
 	{
 		EventFuncArray lst;
 		// 复制一份函数列表出来，以避免回调过程中因为注销问题而产生列表不一致
@@ -83,7 +83,7 @@ namespace KBEngine
 		CopyEvent(lst, eventName);
 		if (lst.Num() == 0)
 		{
-			KBE_WARNING(TEXT("Event::AsyncFire: event(%s) not found!"), *eventName);
+			KBE_WARNING(TEXT("KBEEvent::AsyncFire: event(%s) not found!"), *eventName);
 			return;
 		}
 
@@ -95,7 +95,7 @@ namespace KBEngine
 		}
 	}
 
-	void Event::AsyncFire(const FString& eventName, const FVariantArray &args)
+	void KBEEvent::AsyncFire(const FString& eventName, const FVariantArray &args)
 	{
 		EventObj eobj;
 		eobj.name = eventName;
@@ -106,7 +106,7 @@ namespace KBEngine
 		MonitorExit(cs_firedEvents_);
 	}
 
-	void Event::ProcessAsyncEvents()
+	void KBEEvent::ProcessAsyncEvents()
 	{
 		MonitorEnter(cs_firedEvents_);
 		TArray<EventObj> doingEvents = firedEvents_;
@@ -127,7 +127,7 @@ namespace KBEngine
 			CopyEvent(lst, eobj.name);
 			if (lst.Num() == 0)
 			{
-				KBE_WARNING(TEXT("Event::AsyncFire: event(%s) not found!"), *eobj.name);
+				KBE_WARNING(TEXT("KBEEvent::AsyncFire: event(%s) not found!"), *eobj.name);
 				continue;
 			}
 
@@ -140,7 +140,7 @@ namespace KBEngine
 		}
 	}
 
-	bool Event::Register(const FString& eventName, EventFuncPtr func)
+	bool KBEEvent::Register(const FString& eventName, EventFuncPtr func)
 	{
 		EventPair* pair = new EventPair();
 		pair->objAddr = nullptr;
@@ -151,7 +151,7 @@ namespace KBEngine
 		return true;
 	}
 
-	bool Event::Deregister(const FString& eventName, EventFuncPtr func)
+	bool KBEEvent::Deregister(const FString& eventName, EventFuncPtr func)
 	{
 		MonitorEnter(cs_events_);
 
@@ -169,7 +169,7 @@ namespace KBEngine
 			auto& pair = (*lst)[i];
 			if (pair->objAddr == nullptr && pair->funcAddr == (void *)func)
 			{
-				KBE_DEBUG(TEXT("Event::Deregister: 3 - event(%s:%p:)!"), *eventName, func);
+				KBE_DEBUG(TEXT("KBEEvent::Deregister: 3 - event(%s:%p:)!"), *eventName, func);
 				delete pair;
 				lst->RemoveAt(i);
 				MonitorExit(cs_events_);

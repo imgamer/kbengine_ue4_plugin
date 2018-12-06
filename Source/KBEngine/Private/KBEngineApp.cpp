@@ -1,15 +1,14 @@
+#include "KBEngineApp.h"
 #include "KBEnginePrivatePCH.h"
 #include <functional>
 #include "DateTime.h"
-
-#include "KBEngineApp.h"
 #include "KBEMath.h"
 #include "KBEPersonality.h"
 #include "LoginApp.h"
 #include "BaseApp.h"
 #include "KBEErrors.h"
 #include "EntityDef.h"
-#include "Event.h"
+#include "KBEEvent.h"
 
 namespace KBEngine
 {
@@ -38,7 +37,7 @@ namespace KBEngine
 		KBE_INFO(TEXT("KBEngine::~KBEngineApp()"));
 
 		loseConnectedFromServer_ = false;
-		Event::Instance()->Clear();
+		KBEEvent::Instance()->Clear();
 		CloseLoginApp();
 		CloseBaseApp();
 		KBEErrors::Clear();
