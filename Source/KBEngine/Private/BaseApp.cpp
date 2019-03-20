@@ -1327,7 +1327,7 @@ namespace KBEngine
 		entity->OnDirectionSet(KBEMath::KBEngine2UnrealDirection(direction));
 	}
 
-	void BaseApp::Client_onUpdateData_ypr(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_ypr_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1335,76 +1335,76 @@ namespace KBEngine
 		int8 p = stream.ReadInt8();
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid,FLT_MAX, FLT_MAX, FLT_MAX, y, p, r, -1);
+		UpdateVolatileData(eid,FLT_MAX, FLT_MAX, FLT_MAX, y, p, r, -1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_yp(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_yp_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
 		int8 y = stream.ReadInt8();
 		int8 p = stream.ReadInt8();
 
-		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, y, p, KBEDATATYPE_BASE::KBE_FLT_MAX, -1);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, y, p, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_yr(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_yr_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
 		int8 y = stream.ReadInt8();
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, y, KBEDATATYPE_BASE::KBE_FLT_MAX, r, -1);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, y, KBEDATATYPE_BASE::KBE_FLT_MAX, r, -1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_pr(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_pr_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
 		int8 p = stream.ReadInt8();
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, -1);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, -1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_y(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_y_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
 		float y = stream.ReadPackY();
 
-		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, y, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, -1);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, y, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_p(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_p_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
 		int8 p = stream.ReadInt8();
 
-		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, -1);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_r(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_r_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, -1);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, -1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xz(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xz_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
 		FVector2D xz = stream.ReadPackXZ();
 
-		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 1);
+		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xz_ypr(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xz_ypr_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1414,10 +1414,10 @@ namespace KBEngine
 		int8 p = stream.ReadInt8();
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], y, p, r, 1);
+		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], y, p, r, 1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xz_yp(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xz_yp_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1426,10 +1426,10 @@ namespace KBEngine
 		int8 y = stream.ReadInt8();
 		int8 p = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], y, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 1);
+		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], y, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xz_yr(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xz_yr_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1438,10 +1438,10 @@ namespace KBEngine
 		int8 y = stream.ReadInt8();
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], y, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 1);
+		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], y, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xz_pr(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xz_pr_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1450,18 +1450,18 @@ namespace KBEngine
 		int8 p = stream.ReadInt8();
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, 1);
+		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, 1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xz_y(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xz_y_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 		FVector2D xz = stream.ReadPackXZ();
 		int8 yaw = stream.ReadInt8();
-		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], yaw, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 1);
+		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], yaw, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xz_p(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xz_p_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1469,10 +1469,10 @@ namespace KBEngine
 
 		int8 p = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 1);
+		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xz_r(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xz_r_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1480,34 +1480,20 @@ namespace KBEngine
 
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 1);
+		UpdateVolatileData(eid, xz[0], FLT_MAX, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 1, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xyz(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xyz_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
 		FVector2D xz = stream.ReadPackXZ();
 		float y = stream.ReadPackY();
 
-		UpdateVolatileData(eid, xz[0], y, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 0);
+		UpdateVolatileData(eid, xz[0], y, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 0, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xyz_ypr(MemoryStream &stream)
-	{
-		int32 eid = GetAoiEntityIDFromStream(stream);
-
-		FVector2D xz = stream.ReadPackXZ();
-		float y = stream.ReadPackY();
-
-		int8 yaw = stream.ReadInt8();
-		int8 p = stream.ReadInt8();
-		int8 r = stream.ReadInt8();
-
-		UpdateVolatileData(eid, xz[0], y, xz[1], yaw, p, r, 0);
-	}
-
-	void BaseApp::Client_onUpdateData_xyz_yp(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xyz_ypr_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1516,11 +1502,25 @@ namespace KBEngine
 
 		int8 yaw = stream.ReadInt8();
 		int8 p = stream.ReadInt8();
+		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], y, xz[1], yaw, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 0);
+		UpdateVolatileData(eid, xz[0], y, xz[1], yaw, p, r, 0, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xyz_yr(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xyz_yp_optimized(MemoryStream &stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		FVector2D xz = stream.ReadPackXZ();
+		float y = stream.ReadPackY();
+
+		int8 yaw = stream.ReadInt8();
+		int8 p = stream.ReadInt8();
+
+		UpdateVolatileData(eid, xz[0], y, xz[1], yaw, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 0, true);
+	}
+
+	void BaseApp::Client_onUpdateData_xyz_yr_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1530,10 +1530,10 @@ namespace KBEngine
 		int8 yaw = stream.ReadInt8();
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], y, xz[1], yaw, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 0);
+		UpdateVolatileData(eid, xz[0], y, xz[1], yaw, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 0, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xyz_pr(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xyz_pr_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1543,10 +1543,10 @@ namespace KBEngine
 		int8 p = stream.ReadInt8();
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], y, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, 0);
+		UpdateVolatileData(eid, xz[0], y, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, 0, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xyz_y(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xyz_y_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1554,10 +1554,10 @@ namespace KBEngine
 		float y = stream.ReadPackY();
 
 		int8 yaw = stream.ReadInt8();
-		UpdateVolatileData(eid, xz[0], y, xz[1], yaw, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 0);
+		UpdateVolatileData(eid, xz[0], y, xz[1], yaw, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 0, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xyz_p(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xyz_p_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1566,10 +1566,10 @@ namespace KBEngine
 
 		int8 p = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], y, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 0);
+		UpdateVolatileData(eid, xz[0], y, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 0, true);
 	}
 
-	void BaseApp::Client_onUpdateData_xyz_r(MemoryStream &stream)
+	void BaseApp::Client_onUpdateData_xyz_r_optimized(MemoryStream &stream)
 	{
 		int32 eid = GetAoiEntityIDFromStream(stream);
 
@@ -1578,10 +1578,287 @@ namespace KBEngine
 
 		int8 r = stream.ReadInt8();
 
-		UpdateVolatileData(eid, xz[0], y, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 0);
+		UpdateVolatileData(eid, xz[0], y, xz[1], KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 0, true);
 	}
 
-	void BaseApp::UpdateVolatileData(int32 entityID, float x, float y, float z, float yaw, float pitch, float roll, int8 isOnGround)
+
+
+
+	void BaseApp::Client_onUpdateData_ypr(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float y = stream.ReadFloat();
+		float p = stream.ReadFloat();
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, y, p, r, -1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_yp(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float y = stream.ReadFloat();
+		float p = stream.ReadFloat();
+
+		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, y, p, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_yr(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float y = stream.ReadFloat();
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, y, KBEDATATYPE_BASE::KBE_FLT_MAX, r, -1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_pr(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float p = stream.ReadFloat();
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, -1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_y(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float y = stream.ReadFloat();
+
+		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, y, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_p(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float p = stream.ReadFloat();
+
+		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_r(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, -1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xz(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xz_ypr(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float y = stream.ReadFloat();
+		float p = stream.ReadFloat();
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, y, p, r, 1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xz_yp(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float y = stream.ReadFloat();
+		float p = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, y, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xz_yr(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float y = stream.ReadFloat();
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, y, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xz_pr(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float p = stream.ReadFloat();
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, 1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xz_y(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float y = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, y, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xz_p(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float p = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xz_r(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 1, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xyz(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float y = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, y, z, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 0, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xyz_ypr(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float y = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float yaw = stream.ReadFloat();
+		float p = stream.ReadFloat();
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, y, z, yaw, p, r, 0, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xyz_yp(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float y = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float yaw = stream.ReadFloat();
+		float p = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, y, z, yaw, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 0, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xyz_yr(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float y = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float yaw = stream.ReadFloat();
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, y, z, yaw, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 0, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xyz_pr(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float y = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float p = stream.ReadFloat();
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, y, z, KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, 0, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xyz_y(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float y = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float yaw = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, y, z, yaw, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 0, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xyz_p(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float y = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float p = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, y, z, KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 0, false);
+	}
+
+	void BaseApp::Client_onUpdateData_xyz_r(MemoryStream& stream)
+	{
+		int32 eid = GetAoiEntityIDFromStream(stream);
+
+		float x = stream.ReadFloat();
+		float y = stream.ReadFloat();
+		float z = stream.ReadFloat();
+
+		float r = stream.ReadFloat();
+
+		UpdateVolatileData(eid, x, y, z, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 0, false);
+	}
+
+	void BaseApp::UpdateVolatileData(int32 entityID, float x, float y, float z, float yaw, float pitch, float roll, int8 isOnGround, bool isOptimized)
 	{
 		Entity* entity = FindEntity(entityID);
 		if (!entity)
@@ -1605,19 +1882,40 @@ namespace KBEngine
 		if (roll != KBEDATATYPE_BASE::KBE_FLT_MAX)
 		{
 			changeDirection = true;
-			direction.X = KBEMath::int82angle((int8)roll, false);
+			if (isOptimized) 
+			{
+				direction.X = KBEMath::int82angle((int8)roll, false);
+			}
+			else 
+			{
+				direction.X = roll;
+			}
 		}
 
 		if (pitch != KBEDATATYPE_BASE::KBE_FLT_MAX)
 		{
 			changeDirection = true;
-			direction.Y = KBEMath::int82angle((int8)pitch, false);
+			if (isOptimized)
+			{
+				direction.Y = KBEMath::int82angle((int8)pitch, false);
+			}
+			else
+			{
+				direction.Y = pitch;
+			}
 		}
 
 		if (yaw != KBEDATATYPE_BASE::KBE_FLT_MAX)
 		{
 			changeDirection = true;
-			direction.Z = KBEMath::int82angle((int8)yaw, false);
+			if (isOptimized)
+			{
+				direction.Z = KBEMath::int82angle((int8)yaw, false);
+			}
+			else
+			{
+				direction.Z = yaw;
+			}
 		}
 
 		direction = KBEMath::KBEngine2UnrealDirection(direction);
@@ -1667,7 +1965,8 @@ namespace KBEngine
 			else
 			{
 				// 没有父类则以主角为中心计算世界朝向
-				pos += entityServerPos_;
+				if(isOptimized)
+					pos += entityServerPos_;
 				entity->localPosition_ = pos;
 			}
 		}
@@ -1902,6 +2201,98 @@ namespace KBEngine
 		else if (name == "Client_onUpdateData_xyz_r") {
 
 			Client_onUpdateData_xyz_r(*stream);
+		}
+		else if (name == "Client_onUpdateData_ypr_optimized") {
+
+			Client_onUpdateData_ypr_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_yp_optimized") {
+
+			Client_onUpdateData_yp_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_yr_optimized") {
+
+			Client_onUpdateData_yr_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_pr_optimized") {
+
+			Client_onUpdateData_pr_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_y_optimized") {
+
+			Client_onUpdateData_y_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_p_optimized") {
+
+			Client_onUpdateData_p_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_r_optimized") {
+
+			Client_onUpdateData_r_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xz_optimized") {
+
+			Client_onUpdateData_xz_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xz_ypr_optimized") {
+
+			Client_onUpdateData_xz_ypr_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xz_yp_optimized") {
+
+			Client_onUpdateData_xz_yp_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xz_yr_optimized") {
+
+			Client_onUpdateData_xz_yr_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xz_pr_optimized") {
+
+			Client_onUpdateData_xz_pr_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xz_y_optimized") {
+
+			Client_onUpdateData_xz_y_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xz_p_optimized") {
+
+			Client_onUpdateData_xz_p_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xz_r_optimized") {
+
+			Client_onUpdateData_xz_r_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xyz_optimized") {
+
+			Client_onUpdateData_xyz_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xyz_ypr_optimized") {
+
+			Client_onUpdateData_xyz_ypr_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xyz_yp_optimized") {
+
+			Client_onUpdateData_xyz_yp_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xyz_yr_optimized") {
+
+			Client_onUpdateData_xyz_yr_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xyz_pr_optimized") {
+
+			Client_onUpdateData_xyz_pr_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xyz_y_optimized") {
+
+			Client_onUpdateData_xyz_y_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xyz_p_optimized") {
+
+			Client_onUpdateData_xyz_p_optimized(*stream);
+		}
+		else if (name == "Client_onUpdateData_xyz_r_optimized") {
+
+			Client_onUpdateData_xyz_r_optimized(*stream);
 		}
 		else if (name == "Client_onStreamDataRecv") {
 
