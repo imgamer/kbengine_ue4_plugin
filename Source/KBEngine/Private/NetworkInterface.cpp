@@ -5,6 +5,7 @@
 #include "PacketReceiver.h"
 #include "PacketSender.h"
 #include "KBEngineApp.h"
+#include "StringConv.h"
 
 #if PLATFORM_WINDOWS
 //#include "WinSock2.h"
@@ -218,8 +219,10 @@ namespace KBEngine
 			KBE_ERROR(TEXT("NetworkInterface::ConnectTo: init socket falut."));
 		}
 
+		FString ipAddress = this->GetIPAddress(host);
+
 		ConnectState state;
-		state.connectIP = host;
+		state.connectIP = ipAddress;
 		state.connectPort = port;
 		state.connectCB = callback;
 		state.socket = socket_;
@@ -280,4 +283,29 @@ namespace KBEngine
 		}
 	}
 
+	FString NetworkInterface::GetIPAddress(const FString &ipAddress)
+	{
+		ISocketSubsystem* socketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+		if (socketSubsystem == nullptr)
+		{
+			KBE_ERROR(TEXT("NetworkInterface::GetIPAddress:cant get SocketSubsystem."));
+			return ipAddress;
+		}
+
+		TSharedPtr<FInternetAddr> remoteAddr = socketSubsystem->CreateInternetAddr();
+		FString outIP = ipAddress;
+		bool bIsValid = false;
+		remoteAddr->SetIp(*outIP, bIsValid);	// 验证是否ip地址
+		if (!bIsValid)							// 不是ip地址，作为域名解析
+		{
+			ESocketErrors hostResolveError = socketSubsystem->GetHostByName(TCHAR_TO_ANSI(*ipAddress), *remoteAddr);
+			if (hostResolveError == SE_NO_ERROR || hostResolveError == SE_EWOULDBLOCK)
+			{
+				outIP = remoteAddr->ToString(false);
+				KBE_DEBUG(TEXT("NetworkInterface::GetIPAddress:resolve host ---> %s to %s."), *ipAddress, *outIP);
+			}
+		}
+
+		return outIP;
+	}
 }

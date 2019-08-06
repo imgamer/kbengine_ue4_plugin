@@ -4,6 +4,10 @@
 #include "KBEngineArgs.h"
 #include "KBEEvent.h"
 
+#include "Networking.h"
+#include "SocketSubsystem.h"
+#include "KBEDebug.h"
+
 AKBEMain* AKBEMain::instance = nullptr;
 
 // Sets default values
@@ -77,6 +81,8 @@ void AKBEMain::KBEUpdate()
 
 void AKBEMain::InitKBEngine()
 {
+	//TestResolveIPAddress();
+
 	KBEngine::KBEngineArgs *args = new KBEngine::KBEngineArgs();
 
 	args->host = host;
@@ -95,5 +101,39 @@ void AKBEMain::InitKBEngine()
 	pKBEApp = new KBEngine::KBEngineApp(args);
 
 	//KBEngine::KBEEvent::useSyncMode(!isMultiThreads);
+}
+
+void AKBEMain::TestResolveIPAddress()
+{
+	KBE_WARNING(TEXT("AKBEMain::TestGetIPAddress:host:%s"), *host);
+
+	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+	FSocket* socket = SocketSubsystem->CreateSocket(NAME_Stream, "TestGetIPAddress", true);
+
+	TSharedPtr<FInternetAddr> remoteAddr = SocketSubsystem->CreateInternetAddr();
+	
+	bool bIsValid = false;
+	remoteAddr->SetIp(*host, bIsValid);	// 验证是否ip地址
+	if (!bIsValid)						// 不是ip地址，作为域名解析
+	{
+		ESocketErrors HostResolveError = SocketSubsystem->GetHostByName(TCHAR_TO_ANSI(*host), *remoteAddr);
+		if (HostResolveError == SE_NO_ERROR || HostResolveError == SE_EWOULDBLOCK)
+		{
+			FString outIP = remoteAddr->ToString(false);
+			KBE_WARNING(TEXT("AKBEMain::TestGetIPAddress:resolve ---> %s to %s."), *host, *outIP);
+		}
+
+		/* 以下解析方式会导致崩溃问题，还未研究原因
+		FResolveInfo *resolvInfo = SocketSubsystem->GetHostByName(TCHAR_TO_ANSI(*host));
+		if (resolvInfo == NULL)
+		{
+			KBE_ERROR(TEXT("AKBEMain::TestGetIPAddress:invalid server addr ------------------------>:%s."), *host);
+			return;
+		}
+
+		FString outIP = resolvInfo->GetResolvedAddress().ToString(false);	// 此处会崩
+		KBE_WARNING(TEXT("AKBEMain::TestGetIPAddress:resolve ------------------------> %s to %s."), *host, *outIP);
+		*/
+	}
 }
 
