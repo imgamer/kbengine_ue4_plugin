@@ -7,9 +7,9 @@
 namespace KBEngine
 {
 	PacketSender::PacketSender(NetworkInterface* networkInterface, uint32 buffLength) :
-		networkInterface_(networkInterface),
 		buffer_(new uint8[buffLength]),
-		bufferLength_(buffLength)
+		bufferLength_(buffLength),
+		networkInterface_(networkInterface)
 	{
 		InitPipe();
 	}

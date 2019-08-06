@@ -66,6 +66,8 @@ namespace KBEngine
 
 		void ProcessMessage();
 
+		static FString GetIPAddress(const FString &ipAddress);
+
 	public:
 		// for internal
 

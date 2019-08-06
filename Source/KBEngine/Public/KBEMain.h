@@ -73,4 +73,8 @@ public:
 
 
 	KBEngine::KBEngineApp * pKBEApp = nullptr;
+
+private:
+	// for test，测试主机域名解析
+	void TestResolveIPAddress();
 };

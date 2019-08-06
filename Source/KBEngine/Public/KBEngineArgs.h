@@ -46,7 +46,7 @@ namespace KBEngine
 		TArray<uint8> encryptedKey;
 
 		// 服务端与客户端的版本号以及协议MD5
-		FString clientVersion = "1.1.9";
+		FString clientVersion = "1.2.2";
 		FString clientScriptVersion = "0.1.0";
 	};
 }
