@@ -108,7 +108,7 @@ namespace KBEngine
 
 		void Client_onAppActiveTickCB();
 		void Client_onKicked(uint16 failedcode);
-		void Client_onControlEntity(int32 eid, uint8 isControlled);
+		void Client_onControlEntity(int32 eid, int8 isControlled);
 		void Client_onCreatedProxies(uint64 rndUUID, int32 eid, FString entityType);
 		void Client_onEntityDestroyed(int32 eid);
 

@@ -438,6 +438,17 @@ namespace KBEngine
 		}
 	}
 
+	void Entity::SetParentOnEnterWorld(Entity* parent, const FVector& localpos, const FVector& localdir)
+	{
+		parent_ = parent;
+		parentID_ = parent->ID();
+		parent_->AddChild(this);
+		localPosition_ = localpos;
+		localDirection_ = localdir;
+		if (InWorld())
+			OnGotParentEntity();
+	}
+
 	void Entity::SyncVolatileDataToChildren(bool positionOnly)
 	{
 		for (auto iter : children_)

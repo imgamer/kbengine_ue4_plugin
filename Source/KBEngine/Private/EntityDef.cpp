@@ -204,7 +204,6 @@ namespace KBEngine
 		datatype2id_.Add("PY_DICT", 10);
 		datatype2id_.Add("PY_TUPLE", 10);
 		datatype2id_.Add("PY_LIST", 10);
-		datatype2id_.Add("ENTITYCALL", 10);
 
 		id2datatypes_.Add(10, datatypes_["PYTHON"]);
 
@@ -243,6 +242,10 @@ namespace KBEngine
 		datatype2id_.Add("ARRAY", 19);
 		// 这里不需要绑定，ARRAY需要根据不同类型实例化动态得到id
 		//id2datatypes_[19] = datatypes_["ARRAY"];
+
+		datatype2id_.Add("ENTITYCALL", 20);
+
+		id2datatypes_.Add(20, datatypes_["ENTITYCALL"]);
 	}
 
 	void EntityDef::CreateDataTypeFromStream(MemoryStream &stream)
@@ -258,7 +261,7 @@ namespace KBEngine
 		</onRemoveAvatar>
 		*/
 		if (valname.Len() == 0)
-			valname = "Null_" + utype;
+			valname = FString::Printf(TEXT("Null_%d"), utype);
 
 		KBE_DEBUG(TEXT("EntityDef::CreateDataTypeFromStream: importAlias(%s:%s:%d)!"), *name, *valname, utype);
 

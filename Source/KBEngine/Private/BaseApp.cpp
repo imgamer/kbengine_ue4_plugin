@@ -722,7 +722,7 @@ namespace KBEngine
 			connectedCallbackFunc_(failcode);
 	}
 
-	void BaseApp::Client_onControlEntity(int32 eid, uint8 isControlled)
+	void BaseApp::Client_onControlEntity(int32 eid, int8 isControlled)
 	{
 		Entity **pp = entities_.Find(eid);
 		if (!pp)
@@ -974,9 +974,20 @@ namespace KBEngine
 			isOnGround = stream.ReadInt8();
 
 		int32 parentID = 0;
+		FVector localposition(0.0);
+		FVector localdirection(0.0);
 		if (stream.Length() > 0)
+		{
 			parentID = stream.ReadInt32();
+			localposition.X = stream.ReadFloat();
+			localposition.Y = stream.ReadFloat();
+			localposition.Z = stream.ReadFloat();
 
+			localdirection.X = stream.ReadFloat();
+			localdirection.Y = stream.ReadFloat();
+			localdirection.Z = stream.ReadFloat();
+		}
+			
 		const FString& entityType = EntityDef::GetScriptModule(uentityType)->Name();
 		KBE_DEBUG(TEXT("BaseApp::Client_onEntityEnterWorld: %s(%d), spaceID(%d)!"), *entityType, eid, spaceID_);
 
@@ -1027,7 +1038,7 @@ namespace KBEngine
 				Entity* parentEntity = FindEntity(parentID);
 				if (parentEntity)
 				{
-					entity->SetParent(parentEntity);
+					entity->SetParentOnEnterWorld(parentEntity, KBEMath::KBEngine2UnrealPosition(localposition), KBEMath::KBEngine2UnrealDirection(localdirection));
 				}
 				else
 				{
@@ -2337,7 +2348,7 @@ namespace KBEngine
 		}
 		else if (name == "Client_onControlEntity")
 		{
-			Client_onControlEntity(args[0].GetValue<uint32>(), args[1].GetValue<uint8>());
+			Client_onControlEntity(args[0].GetValue<int32>(), args[1].GetValue<int8>());
 		}
 		else if (name == "Client_onStreamDataStarted") {
 			Client_onStreamDataStarted(args[0].GetValue<int16>(), args[1].GetValue<uint32>(), args[2].GetValue<FString>());
