@@ -318,7 +318,7 @@ namespace KBEngine
 				return false;
 
 			double n = KBEDATATYPE_BASE::ToNumber(v);
-			return n >= FLT_MIN && n <= FLT_MAX;
+			return n >= -FLT_MAX && n <= FLT_MAX;
 		}
 	};
 
@@ -352,7 +352,7 @@ namespace KBEngine
 				return false;
 
 			double n = KBEDATATYPE_BASE::ToNumber(v);
-			return n >= DBL_MIN && n <= DBL_MAX;
+			return n >= -DBL_MAX && n <= DBL_MAX;
 		}
 	};
 
