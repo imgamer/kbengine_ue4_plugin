@@ -29,36 +29,49 @@ namespace KBEngine
 	{
 		KBE_ASSERT(length > 0);
 
-		if (wpos_ == spos_)
-		{
-			wpos_ = 0;
-			spos_ = 0;
-		}
-
 		uint32 t_spos = spos_;
-		uint32 space = 0;
+
+		//写下标大于等于发送下标，说明还没发完或者刚刚发完，并且还没有回环写，则写完尾部再往头部写
 		if (wpos_ >= t_spos)
 		{
-			space = bufferLength_ - wpos_;
+			uint32 space1 = bufferLength_ - wpos_;
+			uint32 space2 = t_spos - 1;		//写下标追上发送下标时保持1个空位，便于判断是发完还是写满
+			if (length > space1 + space2)
+			{
+				KBE_ERROR(TEXT("PacketSender::Send() : no space, Please adjust 'SEND_BUFFER_MAX'!data(%d) > space(%d), wpos=%u, spos=%u"), length, space1 + space2, wpos_, t_spos);
+				return false;
+			}
+
+			if (length <= space1)
+			{
+				memcpy(&(buffer_[wpos_]), datas, length);
+				wpos_ += length;
+			}
+			else
+			{
+				if (space1 > 0)
+				{
+					memcpy(&(buffer_[wpos_]), datas, space1);
+				}
+				memcpy(&(buffer_[0]), datas + space1, length - space1);
+				wpos_ = length - space1;
+			}
 		}
+
+		//发送下标大于写下标，说明还没发完并且已经回环写，则写发送下标与写下标之间空位
 		else
 		{
-			// 暂不考虑环形使用，以减少复杂度
-			// 理论上，如果把buffer长度设为65535，这是足够用的，
-			// 如果不够用，说明客户端消息发送过度了
-			space = 0;
+			if (length > t_spos - wpos_ - 1)
+			{
+				KBE_ERROR(TEXT("PacketSender::Send() : no space, Please adjust 'SEND_BUFFER_MAX'!data(%d) > space(%d), wpos=%u, spos=%u"), length, t_spos - wpos_ - 1, wpos_, t_spos);
+				return false;
+			}
+
+			memcpy(&(buffer_[wpos_]), datas, length);
+			wpos_ += length;
 		}
 
-		if (length > space)
-		{
-			KBE_ERROR(TEXT("PacketSender::Send() : no space, Please adjust 'SEND_BUFFER_MAX'!data(%d) > space(%d), wpos=%u, spos=%u"), length, space, wpos_, t_spos);
-			return false;
-		}
-
-		memcpy(&(buffer_[wpos_]), datas, length);
-		wpos_ += length;
-
-		//KBE_DEBUG(TEXT("PacketSender::Send() : data(%d), space(%d), wpos=%u, spos=%u"), length, space, wpos_, t_spos);
+		KBE_DEBUG(TEXT("PacketSender::Send() : data(%d), wpos=%u, spos=%u"), length, wpos_, t_spos);
 
 		WritePipe();
 
@@ -117,24 +130,12 @@ namespace KBEngine
 
 	uint32 PacketSender::SendSize() const
 	{
-		// wpos_有可能等于bufferLength_，
-		// 且只有wpos_ == spos_时才会在主线程重置，所以这里需要取模
-		uint32 t_wpos = wpos_ % bufferLength_;;
-		
-		// spos_有可能等于bufferLength_，
-		// 且spos_只能在主线程被重置，所以这里需要取模
-		uint32 t_spos = spos_ % bufferLength_;
-
-		if (t_wpos == t_spos)
-			return 0;
-
-		uint32 sendSize = 0;
-		if (t_wpos >= t_spos)
-			sendSize = t_wpos - t_spos;
-		else
-			sendSize = bufferLength_ - t_spos;
-
-		return sendSize;
+		uint32 t_wpos = wpos_;
+		if (t_wpos >= spos_)
+		{
+			return t_wpos - spos_;
+		}
+		return bufferLength_ - spos_ + t_wpos;
 	}
 
 	void PacketSender::BackgroundSend()
@@ -146,8 +147,30 @@ namespace KBEngine
 			return;
 		}
 
+		uint32 tailSize = bufferLength_ - spos_;
 		int32 bytesSent = 0;
-		networkInterface_->Socket()->Send(&(buffer_[spos_ % bufferLength_]), sendSize, bytesSent);
+
+		if (sendSize <= tailSize)
+		{
+			RealBackgroundSend(sendSize, bytesSent);
+			return;
+		}
+
+		uint32 remainSize = sendSize;
+		if (tailSize > 0)
+		{
+			RealBackgroundSend(tailSize, bytesSent);
+			if (tailSize != bytesSent)
+				return;
+			remainSize = sendSize - tailSize;
+		}
+		spos_ = 0;	//重置发送位置
+		RealBackgroundSend(remainSize, bytesSent);
+	}
+
+	void PacketSender::RealBackgroundSend(uint32 sendSize, int32 &bytesSent)
+	{
+		networkInterface_->Socket()->Send(&(buffer_[spos_]), sendSize, bytesSent);
 
 		if (bytesSent == -1)
 		{

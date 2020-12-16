@@ -1,5 +1,7 @@
 #pragma once
 
+#include "KBEDebug.h"
+
 namespace KBEngine
 {
 	class NetworkInterface;
@@ -26,6 +28,7 @@ namespace KBEngine
 
 		uint32 SendSize() const;
 		void BackgroundSend();
+		void  RealBackgroundSend(uint32 sendSize, int32 &bytesSent);
 		FString ReadPipe();
 		void WritePipe();
 		void InitPipe();
@@ -50,6 +53,77 @@ namespace KBEngine
 		// 由NetworkInterface关闭网络时通知，
 		// 以避免在主动关闭网络时也发出错误信息
 		bool willClose_ = false;
+
+		template <typename T> T read(uint32 pos) const
+		{
+			T val = *((T const*)&buffer_[pos]);
+			EndianConvert(val);
+			return val;
+		}
+
+		void hexlike(uint32 startPos, uint32 tSize)
+		{
+			uint32 j = 1, k = 1;
+			char buf[1024];
+			std::string fbuffer;
+			uint32 endPos = startPos + tSize;
+
+			_snprintf(buf, 1024, "STORAGE_SIZE: endPos=%lu, startPos=%lu.\n", (unsigned long)endPos, (unsigned long)startPos);
+			fbuffer += buf;
+
+			uint32 i = 0;
+			for (uint32 idx = startPos; idx < endPos; ++idx)
+			{
+				++i;
+				if ((i == (j * 8)) && ((i != (k * 16))))
+				{
+					if (read<uint8>(idx) < 0x10)
+					{
+						_snprintf(buf, 1024, "| 0%X ", read<uint8>(idx));
+						fbuffer += buf;
+					}
+					else
+					{
+						_snprintf(buf, 1024, "| %X ", read<uint8>(idx));
+						fbuffer += buf;
+					}
+					++j;
+				}
+				else if (i == (k * 16))
+				{
+					if (read<uint8>(idx) < 0x10)
+					{
+						_snprintf(buf, 1024, "\n0%X ", read<uint8>(idx));
+						fbuffer += buf;
+					}
+					else
+					{
+						_snprintf(buf, 1024, "\n%X ", read<uint8>(idx));
+						fbuffer += buf;
+					}
+
+					++k;
+					++j;
+				}
+				else
+				{
+					if (read<uint8>(idx) < 0x10)
+					{
+						_snprintf(buf, 1024, "0%X ", read<uint8>(idx));
+						fbuffer += buf;
+					}
+					else
+					{
+						_snprintf(buf, 1024, "%X ", read<uint8>(idx));
+						fbuffer += buf;
+					}
+				}
+			}
+
+			fbuffer += "\n";
+
+			KBE_ERROR(TEXT("%s"), *FString(fbuffer.c_str()));
+		}
 	};
 
 }

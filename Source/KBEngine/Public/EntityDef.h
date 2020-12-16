@@ -33,6 +33,7 @@ namespace KBEngine
 		static bool ImportEntityDefFromStream(MemoryStream &stream);
 
 		static bool EntityDefImported() { return entityDefImported_; }
+		static void EntityDefImported(bool bValue) { entityDefImported_ = bValue; }
 
 	private:
 		static void InitDataType();

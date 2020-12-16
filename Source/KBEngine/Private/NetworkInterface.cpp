@@ -256,7 +256,7 @@ namespace KBEngine
 
 		if (!packetSender_)
 		{
-			packetSender_ = new PacketSender(this);
+			packetSender_ = new PacketSender(this, KBEngineApp::app->GetSendBufferMax());
 			packetSender_->StartBackgroundSend();
 		}
 

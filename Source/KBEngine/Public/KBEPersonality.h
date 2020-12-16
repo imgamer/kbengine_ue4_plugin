@@ -44,6 +44,13 @@ namespace KBEngine
 		/* 当成功通过KBEngineApp::ResetPassword()重置账号密码后，此方法被触发 */
 		virtual void OnResetPasswordSuccess(const FString& account) {}
 
+		// 服务端通知已经做好跨服登录准备，调用
+		virtual void OnAcrossServerReady() {}
+		// 当跨服登录失败时，此方法被触发
+		virtual void OnAcrossLoginFailed(int32 errCode, const FString& errName, const FString& errDesc) {}
+		// 跨服登录成功
+		virtual void OnAcrossLoginSuccess() {}
+
 		/*
 		服务端通知流数据下载开始
 		see also: 服务器文档，baseapp -> classes -> Proxy::streamStringToClient()

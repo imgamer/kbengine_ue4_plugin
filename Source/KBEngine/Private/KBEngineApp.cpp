@@ -40,6 +40,7 @@ namespace KBEngine
 		KBEEvent::Instance()->Clear();
 		CloseLoginApp();
 		CloseBaseApp();
+		CloseAcrossBaseApp();
 		KBEErrors::Clear();
 		EntityDef::Clear();
 		KBEngineApp::app = nullptr;
@@ -54,6 +55,12 @@ namespace KBEngine
 		if (baseApp_)
 			baseApp_->OnLoseConnect();
 
+		if (acrossBaseApp_)
+			acrossBaseApp_->OnLoseConnect();
+
+		if (isInAcrossServer_)
+			isInAcrossServer_ = false;
+
 		if (KBEPersonality::Instance())
 			KBEPersonality::Instance()->OnDisconnect();
 	}
@@ -62,6 +69,8 @@ namespace KBEngine
 	{
 		if (baseApp_)
 			return baseApp_->Player();
+		if (acrossBaseApp_)
+			return acrossBaseApp_->Player();
 		return nullptr;
 	}
 
@@ -69,6 +78,8 @@ namespace KBEngine
 	{
 		if (baseApp_)
 			return baseApp_->FindEntity(entityID);
+		if (acrossBaseApp_)
+			return acrossBaseApp_->FindEntity(entityID);
 		return nullptr;
 	}
 
@@ -76,6 +87,8 @@ namespace KBEngine
 	{
 		if (baseApp_)
 			return baseApp_->Entities();
+		if (acrossBaseApp_)
+			return acrossBaseApp_->Entities();
 		return nullptr;
 	}
 
@@ -87,6 +100,7 @@ namespace KBEngine
 		{
 			SAFE_DELETE(loginApp_);
 			SAFE_DELETE(baseApp_);
+			SAFE_DELETE(acrossBaseApp_);
 			loseConnectedFromServer_ = false;
 		}
 
@@ -98,6 +112,9 @@ namespace KBEngine
 
 		if (baseApp_)
 			baseApp_->Process();
+
+		if (acrossBaseApp_)
+			acrossBaseApp_->Process();
 	}
 
 	void KBEngineApp::Disconnect()
@@ -108,6 +125,7 @@ namespace KBEngine
 
 		CloseLoginApp();
 		CloseBaseApp();
+		CloseAcrossBaseApp();
 	}
 
 	void KBEngineApp::CloseLoginApp()
@@ -130,15 +148,21 @@ namespace KBEngine
 		}
 	}
 
-
-
-
-
+	void KBEngineApp::CloseAcrossBaseApp()
+	{
+		if (acrossBaseApp_)
+		{
+			acrossBaseApp_->Disconnect();
+			delete acrossBaseApp_;
+			acrossBaseApp_ = nullptr;
+		}
+	}
 
 	void KBEngineApp::Login(const FString& username, const FString& password, const TArray<uint8>& datas)
 	{
 		KBE_ASSERT(!loginApp_);
 		KBE_ASSERT(!baseApp_);
+		KBE_ASSERT(!acrossBaseApp_);
 
 		EntityDef::Init();
 
@@ -219,6 +243,7 @@ namespace KBEngine
 	{
 		KBE_ASSERT(!loginApp_);
 		KBE_ASSERT(!baseApp_);
+		KBE_ASSERT(!acrossBaseApp_);
 
 		EntityDef::Init();
 
@@ -248,6 +273,7 @@ namespace KBEngine
 	{
 		KBE_ASSERT(!loginApp_);
 		KBE_ASSERT(!baseApp_);
+		KBE_ASSERT(!acrossBaseApp_);
 
 		EntityDef::Init();
 
@@ -307,5 +333,92 @@ namespace KBEngine
 	{
 		if (KBEPersonality::Instance())
 			KBEPersonality::Instance()->OnNewPassword(code, KBEErrors::ErrorName(code), KBEErrors::ErrorDesc(code));
+	}
+
+	void KBEngineApp::AcrossServerReady(UINT64 loginKey, FString& baseappHost, UINT16 port)
+	{
+		acrossLoginKey_ = loginKey;
+		acrossBaseappHost_ = baseappHost;
+		acrossBaseappPort_ = port;
+		acrossLoginReadyTime_ = FDateTime::UtcNow();
+
+		// todo: 登录过期机制，状态设置，过期清理数据。
+
+		if (KBEPersonality::Instance())
+			KBEPersonality::Instance()->OnAcrossServerReady();
+	}
+
+	void KBEngineApp::ResetAcrossData()
+	{
+		acrossLoginKey_ = 0;
+		acrossBaseappHost_ = "";
+		acrossBaseappPort_ = 0;
+		acrossLoginReadyTime_;
+	}
+
+	void KBEngineApp::AcrossLoginBaseapp()
+	{
+		KBE_ASSERT(!loginApp_);
+		KBE_ASSERT(!baseApp_);
+		KBE_ASSERT(!acrossBaseApp_);
+
+		//恢复一下，不然之后会因为已经初始化而触发assert
+		pMessages()->BaseappMessageImported(false);
+		EntityDef::EntityDefImported(false);
+
+		acrossBaseApp_ = new BaseApp(this);
+		acrossBaseApp_->Connect(acrossBaseappHost_, acrossBaseappPort_, std::bind(&KBEngineApp::OnConnectAcrossBaseappCB, this, std::placeholders::_1));
+	}
+
+	void KBEngineApp::OnConnectAcrossBaseappCB(int32 code)
+	{
+		if (code != (int32)ERROR_TYPE::SUCCESS)
+		{
+			ResetAcrossData();
+			if (KBEPersonality::Instance())
+				KBEPersonality::Instance()->OnAcrossLoginFailed(code, KBEErrors::ErrorName(code), KBEErrors::ErrorDesc(code));
+			return;
+		}
+
+		acrossBaseApp_->AcrossLogin(baseappAccount_, password_, ClientType(), acrossLoginKey_, std::bind(&KBEngineApp::OnLoginAcrossBaseappCB, this, std::placeholders::_1));
+	}
+
+	void KBEngineApp::OnLoginAcrossBaseappCB(int32 code)
+	{
+		ResetAcrossData();
+		KBE_DEBUG(TEXT("KBEngineApp::OnLoginAcrossBaseappCB: (%s:%s)!"), *KBEErrors::ErrorName(code), *KBEErrors::ErrorDesc(code));
+
+		if (code != (int32)ERROR_TYPE::SUCCESS)
+		{
+			if (KBEPersonality::Instance())
+			{
+				KBEPersonality::Instance()->OnAcrossLoginFailed(code, KBEErrors::ErrorName(code), KBEErrors::ErrorDesc(code));
+				return;
+			}
+		}
+
+		isInAcrossServer_ = true;
+
+		if (KBEPersonality::Instance())
+			KBEPersonality::Instance()->OnAcrossLoginSuccess();
+
+		acrossBaseApp_->AcrossLoginSuccess();
+	}
+
+	void KBEngineApp::AcrossLoginBack()
+	{
+		KBE_ASSERT(!loginApp_);
+		KBE_ASSERT(!baseApp_);
+		KBE_ASSERT(!acrossBaseApp_);
+
+		EntityDef::Init();
+
+		//恢复一下，不然之后会因为已经初始化而触发assert
+		pMessages()->BaseappMessageImported(false);
+		EntityDef::EntityDefImported(false);
+
+		// TODO: 使用已有的账号密码登陆源服务器
+		loginApp_ = new LoginApp(this);
+		loginApp_->Connect(LoginappHost(), LoginappPort(), std::bind(&KBEngineApp::OnConnectToLoginappCB, this, std::placeholders::_1, TEXT("Login")));
 	}
 }

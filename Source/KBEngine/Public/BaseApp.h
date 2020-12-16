@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 
+#include "KBEDefine.h"
 #include "Core.h"
 #include "MessagesHandler.h"
 
@@ -44,6 +45,13 @@ namespace KBEngine
 		*/
 		void Relogin(ConnectCallbackFunc func);
 
+
+		// 跨服登录
+		void AcrossLogin(FString& accountName, FString& password, CLIENT_TYPE clientType, UINT16 loginKey, ConnectCallbackFunc func);
+		// 跨服登录成功
+		void AcrossLoginSuccess();
+
+
 		// 绑定账号邮箱
 		void BindAccountEmail(const FString& emailAddress, ConnectCallbackFunc func);
 
@@ -77,6 +85,7 @@ namespace KBEngine
 		NetworkInterface* pNetworkInterface() { return networkInterface_; }
 		void OnLoseConnect();  // 失去与服务器的连接（非主动断开）
 
+		bool IsAcrossServer() { return isAcrossServer_; }
 
 	private:
 		void UpdatePlayerToServer();
@@ -101,6 +110,7 @@ namespace KBEngine
 		void Client_onImportClientEntityDef(MemoryStream &stream);
 		
 		void Client_onLoginBaseappFailed(uint16 failedcode);
+		void Client_onLoginBaseappSuccessfully(MemoryStream &stream);
 		void Client_onReloginBaseappFailed(uint16 failedcode);
 		void Client_onReloginBaseappSuccessfully(MemoryStream &stream);
 		void Client_onReqAccountBindEmailCB(uint16 failcode);
@@ -211,6 +221,9 @@ namespace KBEngine
 		// 服务器通知客户端：某个entity的parent改变了
 		void Client_onParentChanged(int32 eid, int32 parentID);
 
+		// 跨服准备完毕，可以登录了
+		void Client_acrossServerReady(MemoryStream &stream);
+
 		bool NeedAdditionalUpdate(Entity *entity);
 		void ResetAdditionalUpdateCount();
 		bool PlayerNeedUpdate(Entity *entity, bool moveChanged);
@@ -273,6 +286,10 @@ namespace KBEngine
 		
 		// 玩家停止移动后，额外向服务端同步位置朝向的次数
 		uint8 additionalUpdateCount_ = BaseApp::ADDITIONAL_UPDATE_COUNT;
+		
+		// 是否跨服中
+		bool isAcrossServer_ = false;
+
 	};  // end of class BaseApp;
 
 

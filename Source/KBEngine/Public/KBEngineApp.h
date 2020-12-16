@@ -49,6 +49,12 @@ namespace KBEngine
 		void BindAccountEmail(const FString& emailAddress);
 		void NewPassword(const FString old_password, const FString new_password);
 
+		// 使用未过期的登录凭证跨服登录baseapp
+		void AcrossLoginBaseapp();
+		void AcrossServerReady(UINT64 loginKey, FString& baseappHost, UINT16 port);
+		// 跨服登陆结束后重新登陆源服务器
+		void AcrossLoginBack();
+
 		// 按照标准，每个客户端部分都应该包含这个属性
 		const FString& Component() { return component_; }
 
@@ -63,7 +69,15 @@ namespace KBEngine
 
 		PersistentInofs* pPersistentInofs() { return persistentInofs_; }
 
-		BaseApp* pBaseApp() { return baseApp_; }
+		BaseApp* pBaseApp()
+		{
+			if(baseApp_!= nullptr)
+				return baseApp_;
+			if (acrossBaseApp_ != nullptr) 
+				return acrossBaseApp_;
+			return nullptr;
+		}
+
 		LoginApp* pLoginApp() { return loginApp_; }
 		Messages* pMessages() { return &messages_; }
 
@@ -83,6 +97,7 @@ namespace KBEngine
 		const FString& LoginappHost() { return args_->host; }
 		uint16 LoginappPort() { return args_->port; }
 		uint32 GetRecvBufferMax() { return args_->RECV_BUFFER_MAX; }
+		uint32 GetSendBufferMax() {	return args_->SEND_BUFFER_MAX; }
 
 	private:
 		// 取得初始化时的参数
@@ -90,6 +105,7 @@ namespace KBEngine
 
 		void CloseLoginApp();
 		void CloseBaseApp();
+		void CloseAcrossBaseApp();
 
 		void OnConnectToLoginappCB(int32 code, FString key);
 		void OnLoginToLoginappCB(int32 code);
@@ -97,18 +113,25 @@ namespace KBEngine
 		void OnConnectToBaseappCB(int32 code);
 		void OnLoginToBaseappCB(int32 code);
 
+		void OnConnectAcrossBaseappCB(int32 code);
+		void OnLoginAcrossBaseappCB(int32 code);
+
 		void OnCreateAccountCB(int32 code);
 		void OnResetPasswordCB(int32 code);
-		
+
 		void OnReLoginBaseappCB(int32 code);
 		void OnBindAccountEmailCB(int32 code);
 		void OnNewPasswordCB(int32 code);
 
 	private:
+		void ResetAcrossData();
+
 		FString component_ = TEXT("client");
 
 		LoginApp* loginApp_ = nullptr;
 		BaseApp* baseApp_ = nullptr;
+
+		BaseApp* acrossBaseApp_ = nullptr;	// 跨服登录的baseapp
 
 		// 消息管理器
 		Messages messages_;
@@ -127,6 +150,13 @@ namespace KBEngine
 		FString password_;
 		TArray<uint8> clientdatas_;
 		FString baseappAccount_;
+
+		UINT64 acrossLoginKey_;
+		FString acrossBaseappHost_;
+		UINT16 acrossBaseappPort_;
+		FDateTime acrossLoginReadyTime_;
+
+		bool isInAcrossServer_ = false;
 
 		bool loseConnectedFromServer_ = false;
 	};

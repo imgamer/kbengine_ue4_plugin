@@ -643,11 +643,37 @@ namespace KBEngine
 		delete bundle;
 	}
 
+	void BaseApp::AcrossLogin(FString& accountName, FString& password, CLIENT_TYPE clientType, UINT16 loginKey, ConnectCallbackFunc func)
+	{
+		connectedCallbackFunc_ = func;
+		Bundle* bundle = new Bundle();
+		bundle->NewMessage(messages_->GetMessage("Baseapp_acrossLogin"));
+		bundle->WriteString(accountName);
+		bundle->WriteString(password);
+		bundle->WriteInt8((int8)clientType);
+		bundle->WriteUint64(loginKey);
+		bundle->Send(networkInterface_);
+		delete bundle;
+	}
+
+	void BaseApp::AcrossLoginSuccess()
+	{
+		isAcrossServer_ = true;
+	}
+
 	void BaseApp::Client_onLoginBaseappFailed(uint16 failedcode)
 	{
 		KBE_ERROR(TEXT("BaseApp::Client_onLoginBaseappFailed: failedcode(%d)!"), failedcode);
 		if (connectedCallbackFunc_)
 			connectedCallbackFunc_(failedcode);
+	}
+
+	void BaseApp::Client_onLoginBaseappSuccessfully(MemoryStream &stream) 
+	{
+		entity_uuid_ = stream.ReadUint64();
+		KBE_DEBUG(TEXT("BaseApp::Client_onLoginBaseappSuccessfully: name(%s)!"), *account_);
+		if (connectedCallbackFunc_)
+			connectedCallbackFunc_((int32)ERROR_TYPE::SUCCESS);
 	}
 
 	void BaseApp::Client_onReloginBaseappFailed(uint16 failedcode)
@@ -1067,7 +1093,7 @@ namespace KBEngine
 		else
 		{
 			// 理论上，只有玩家断线重连的时候才会走到这里
-			KBE_ASSERT(entity->ID() == entity_id_);
+			//KBE_ASSERT(entity->ID() == entity_id_);		//玩家changeToReal时视野内其他entity也会走到这儿，因此需要注释掉
 			if (!entity->InWorld())
 			{
 				KBE_DEBUG(TEXT("BaseApp::Client_onEntityEnterWorld: entity(%d) EnterWorld."), eid);
@@ -2040,8 +2066,17 @@ namespace KBEngine
 			ent->SetParent(parentEnt);
 	}
 
+	void BaseApp::Client_acrossServerReady(MemoryStream & stream)
+	{
+		UINT64 loginKey = stream.ReadUint64();
+		FString baseappHost = stream.ReadString();
+		UINT16 basePort = stream.ReadUint16();
 
+		KBE_DEBUG(TEXT("LoginApp::Client_acrossServerReady: accountName(%s), addr(%s:%d)!"),
+			*account_, *baseappHost, basePort);
 
+		app_->AcrossServerReady(loginKey, baseappHost, basePort);
+	}
 
 	void BaseApp::Process()
 	{
@@ -2076,6 +2111,10 @@ namespace KBEngine
 		else if (name == "Client_onImportClientEntityDef") {
 
 			Client_onImportClientEntityDef(*stream);
+		}
+		else if (name == "Client_onLoginBaseappSuccessfully") {
+
+			Client_onLoginBaseappSuccessfully(*stream);
 		}
 		else if (name == "Client_onReloginBaseappSuccessfully") {
 
@@ -2315,6 +2354,9 @@ namespace KBEngine
 		}
 		else if (name == "Client_onAppActiveTickCB") {
 			Client_onAppActiveTickCB();
+		}
+		else if (name == "Client_acrossServerReady") {
+			Client_acrossServerReady(*stream);
 		}
 		else
 		{

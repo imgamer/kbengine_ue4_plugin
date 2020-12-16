@@ -59,6 +59,7 @@ namespace KBEngine
 		const Message* GetClientMessage(MessageID id);
 
 		bool BaseappMessageImported() { return baseappMessageImported_; }
+		void BaseappMessageImported(bool bValue) { baseappMessageImported_ = bValue; }
 		bool LoginappMessageImported() { return loginappMessageImported_; }
 
 		bool ImportMessagesFromStream(MemoryStream& stream, SERVER_APP_TYPE fromApp);

@@ -43,6 +43,15 @@ namespace KBEngine
 
 	void Entity::RemoteMethodCall(const FString &name, const TArray<FVariant> &args)
 	{
+		//KBE_ERROR(TEXT("Entity::RemoteMethodCall: Entity (id: %d) has no method '%s' to bound!"), id_, *name);
+		OnRemoteMethodCall(name, args);
+	}
+
+	void Entity::OnRemoteMethodCall(const FString &name, const TArray<FVariant> &args)
+	{
+		//KBE_ERROR(TEXT("Entity::OnRemoteMethodCall: Entity (id: %d) has no method '%s' to bound!"), id_, *name);
+		// wsf:在此函数进行远程方法调用的处理，以便外部使用者可以根据需求进行控制
+		// 例如在某一时刻远程消息太多的情况下不立刻触发调用，而是缓存起来根据某种策略平滑处理
 		auto map = GetMethodMap();
 		if (!map)
 			return;
@@ -67,14 +76,6 @@ namespace KBEngine
 			map = map->pfnGetBaseMap();
 
 		} while (map);
-
-		//KBE_ERROR(TEXT("Entity::RemoteMethodCall: Entity (id: %d) has no method '%s' to bound!"), id_, *name);
-		OnRemoteMethodCall(name, args);
-	}
-
-	void Entity::OnRemoteMethodCall(const FString &name, const TArray<FVariant> &args)
-	{
-		KBE_ERROR(TEXT("Entity::OnRemoteMethodCall: Entity (id: %d) has no method '%s' to bound!"), id_, *name);
 	}
 
 	bool Entity::IsPlayer()
