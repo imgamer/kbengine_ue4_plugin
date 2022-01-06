@@ -95,8 +95,12 @@ void AKBEMain::InitKBEngine()
 	args->useAliasEntityID = useAliasEntityID;
 	args->isOnInitCallPropertysSetMethods = isOnInitCallPropertysSetMethods;
 
-	args->SEND_BUFFER_MAX = sendBufferMax;
-	args->RECV_BUFFER_MAX = recvBufferMax;
+	args->TCP_SEND_BUFFER_MAX = TCP_SEND_BUFFER_MAX;
+	args->TCP_RECV_BUFFER_MAX = TCP_RECV_BUFFER_MAX;
+
+	args->forceDisableUDP = forceDisableUDP;
+	args->UDP_SEND_BUFFER_MAX = UDP_SEND_BUFFER_MAX;
+	args->UDP_RECV_BUFFER_MAX = UDP_RECV_BUFFER_MAX;
 
 	pKBEApp = new KBEngine::KBEngineApp(args);
 

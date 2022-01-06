@@ -32,7 +32,7 @@ namespace KBEngine
 		return bundle_;
 	}
 
-	void Mailbox::PostMail(NetworkInterface *networkInterface)
+	void Mailbox::PostMail(NetworkInterfaceBase *networkInterface)
 	{
 		KBE_ASSERT(bundle_);
 

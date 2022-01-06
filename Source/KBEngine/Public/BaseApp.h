@@ -8,7 +8,7 @@
 namespace KBEngine
 {
 	class KBEngineApp;
-	class NetworkInterface;
+	class NetworkInterfaceBase;
 	class MessageReader;
 	class Messages;
 	class Entity;
@@ -28,7 +28,7 @@ namespace KBEngine
 		virtual ~BaseApp();
 
 		// 连接到服务器
-		void Connect(const FString& host, uint16 port, ConnectCallbackFunc func);
+		void Connect(const FString& host, uint16 tcpPort, uint16 udpPort, ConnectCallbackFunc func);
 
 		// 主动断开网络连接
 		void Disconnect();
@@ -82,7 +82,7 @@ namespace KBEngine
 
 		void EntityServerPos(FVector pos) { entityServerPos_ = pos; }
 		Messages* pMessages() { return messages_; }
-		NetworkInterface* pNetworkInterface() { return networkInterface_; }
+		NetworkInterfaceBase* pNetworkInterface() { return networkInterface_; }
 		void OnLoseConnect();  // 失去与服务器的连接（非主动断开）
 
 		bool IsAcrossServer() { return isAcrossServer_; }
@@ -237,10 +237,11 @@ namespace KBEngine
 		// 消息处执行器
 		Messages *messages_ = nullptr;
 
-		NetworkInterface* networkInterface_ = nullptr;
+		NetworkInterfaceBase* networkInterface_ = nullptr;
 
 		FString host_;
-		uint16 port_;
+		uint16 tcpPort_;
+		uint16 baseappUdpPort_;
 		ConnectCallbackFunc connectedCallbackFunc_;
 
 		// 当前玩家的实体id与实体类别

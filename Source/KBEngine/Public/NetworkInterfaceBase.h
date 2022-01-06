@@ -8,21 +8,14 @@
 namespace KBEngine
 {
 	class KBEngineApp;
-	class PacketReceiver;
-	class PacketSender;
+	class PacketReceiverBase;
+	class PacketSenderBase;
+	class NetworkStatus;
 
-
-	class KBENGINE_API NetworkInterface
+	class KBENGINE_API NetworkInterfaceBase
 	{
 	public:
 		typedef std::function<void(FString, int, bool)> ConnectCallbackFun;
-
-		class NetworkStatus
-		{
-		public:
-			virtual ~NetworkStatus() {}
-			virtual void MainThreadProcess(NetworkInterface *networkInterface) = 0;
-		};
 
 		typedef struct
 		{
@@ -31,38 +24,38 @@ namespace KBEngine
 			uint16 connectPort = 0;
 			ConnectCallbackFun connectCB;
 			FSocket* socket = nullptr;
-			NetworkInterface* networkInterface = nullptr;
+			NetworkInterfaceBase* networkInterface = nullptr;
 			FString error = "";
 		}ConnectState;
 
 	public:
-		NetworkInterface(MessageReader* messageReader);
-		~NetworkInterface();
+		NetworkInterfaceBase(MessageReader* messageReader);
+		virtual ~NetworkInterfaceBase();
 
 		static const int TCP_PACKET_MAX = 65535;
 
-		bool InitSocket(uint32 receiveBufferSize = 0, uint32 sendBufferSize = 0);
+		virtual bool InitSocket(uint32 receiveBufferSize = 0, uint32 sendBufferSize = 0) = 0;
 		void Reset();
 
 		ISocketSubsystem* SocketSubsystem() { return socketSubsystem_; }
 		FSocket* Socket() { return socket_; }
 
-		bool Valid();
+		virtual bool Valid();
 
 		// 参数不能用引用模式，因为在内部会改变状态，删除原来的状态数据
-		void OnConnected(ConnectState state);
+		virtual void OnConnected(ConnectState state);
 
 		void ConnectTo(const FString& ip, uint16 port, ConnectCallbackFun callback);
 
-		void Close();
+		virtual void Close();
 
 		bool Send(uint8* datas, int32 length);
 
-		void Process();
+		virtual void Process();
 
 		void ChangeNetworkStatus(NetworkStatus* status);
 
-		PacketReceiver* GetReceiver() { return packetReceiver_; }
+		PacketReceiverBase* GetReceiver() { return packetReceiver_; }
 
 		void ProcessMessage();
 
@@ -75,12 +68,19 @@ namespace KBEngine
 		// 此接口将被子线程调用
 		void WillClose();
 
-	private:
+	protected:
+		virtual PacketReceiverBase* CreatePacketReceiver() = 0;
+
+		virtual void InitPacketSender() = 0;
+
+		virtual void StartConnect(ConnectState state) = 0;
+
+	protected:
 		FSocket* socket_ = nullptr;
 		ISocketSubsystem* socketSubsystem_ = nullptr;
 
-		PacketReceiver* packetReceiver_ = nullptr;
-		PacketSender* packetSender_ = nullptr;
+		PacketReceiverBase* packetReceiver_ = nullptr;
+		PacketSenderBase* packetSender_ = nullptr;
 
 		bool willClose_ = false;
 

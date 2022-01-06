@@ -4,7 +4,7 @@
 
 namespace KBEngine
 {
-	class NetworkInterface;
+	class NetworkInterfaceBase;
 
 	class KBENGINE_API Mailbox
 	{
@@ -36,7 +36,7 @@ namespace KBEngine
 		/*
 		向服务端发送这个mail
 		*/
-		void PostMail(NetworkInterface *networkInterface);
+		void PostMail(NetworkInterfaceBase *networkInterface);
 
 		int32 ID() { return id_; }
 		const FString& ClassName() { return className_; }

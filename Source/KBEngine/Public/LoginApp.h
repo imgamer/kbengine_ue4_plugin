@@ -7,7 +7,7 @@
 namespace KBEngine
 {
 	class KBEngineApp;
-	class NetworkInterface;
+	class NetworkInterfaceBase;
 	class MessageReader;
 	class Messages;
 
@@ -51,12 +51,13 @@ namespace KBEngine
 
 		const FString& BaseAppAccount() { return baseappAccount_; }
 		const FString& BaseAppHost() { return baseappHost_; }
-		uint16 BaseAppPort() { return baseappPort_; }
+		uint16 BaseAppTcpPort() { return baseappTcpPort_; }
+		uint16 BaseAppUdpPort() { return baseappUdpPort_; }
 
 	public:
 		// for internal
 
-		NetworkInterface* pNetworkInterface() { return networkInterface_; }
+		NetworkInterfaceBase* pNetworkInterface() { return networkInterface_; }
 		void OnLoseConnect();  // 失去与服务器的连接（非主动断开）
 
 
@@ -92,7 +93,7 @@ namespace KBEngine
 		// 消息处执行器
 		Messages *messages_ = nullptr;
 
-		NetworkInterface* networkInterface_ = nullptr;
+		NetworkInterfaceBase* networkInterface_ = nullptr;
 
 		// 记录下登录时的地址、账号等信息
 		FString host_;
@@ -105,7 +106,8 @@ namespace KBEngine
 		// 登录成功后，loginapp返回的BaseApp登录信息
 		FString baseappAccount_;
 		FString baseappHost_;
-		uint16 baseappPort_ = 0;
+		uint16 baseappTcpPort_ = 0;
+		uint16 baseappUdpPort_ = 0;
 
 		// 最后一次心跳发送时间、最后一次收到心跳回复的时间
 		// 用于作为是否断线的判断依据

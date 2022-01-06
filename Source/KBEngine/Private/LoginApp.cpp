@@ -1,7 +1,8 @@
 #include "LoginApp.h"
 #include "KBEnginePrivatePCH.h"
 #include "KBEngineApp.h"
-#include "NetworkInterface.h"
+#include "NetworkInterfaceBase.h"
+#include "NetworkInterfaceTCP.h"
 #include "KBEDebug.h"
 #include "Bundle.h"
 #include "KBEPersonality.h"
@@ -14,7 +15,7 @@ namespace KBEngine
 	{
 		KBE_ASSERT(app_);
 		messages_ = app->pMessages();
-		messageReader_ = new MessageReader(this, messages_, KBEngineApp::app->GetRecvBufferMax());
+		messageReader_ = new MessageReader(this, messages_, KBEngineApp::app->GetTcpRecvBufferMax());
 
 	}
 
@@ -77,7 +78,7 @@ namespace KBEngine
 		host_ = host;
 		port_ = port;
 		connectedCallbackFunc_ = func;
-		networkInterface_ = new NetworkInterface(messageReader_);
+		networkInterface_ = new NetworkInterfaceTCP(messageReader_);
 		networkInterface_->ConnectTo(host, port, std::bind(&LoginApp::OnConnected, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	}
 
@@ -294,12 +295,13 @@ namespace KBEngine
 	{
 		baseappAccount_ = stream.ReadString();;
 		baseappHost_ = stream.ReadString();
-		baseappPort_ = stream.ReadUint16();
+		baseappTcpPort_ = stream.ReadUint16();
+		baseappUdpPort_ = stream.ReadUint16();
 		TArray<uint8> serverDatas;
 		stream.ReadBlob(serverDatas);
 
 		KBE_DEBUG(TEXT("LoginApp::Client_onLoginSuccessfully: accountName(%s), addr(%s:%d), datas(%d)!"),
-			*baseappAccount_, *baseappHost_, baseappPort_, serverDatas.Num());
+			*baseappAccount_, *baseappHost_, baseappTcpPort_, serverDatas.Num());
 
 		if (connectedCallbackFunc_)
 			connectedCallbackFunc_((int)ERROR_TYPE::SUCCESS);

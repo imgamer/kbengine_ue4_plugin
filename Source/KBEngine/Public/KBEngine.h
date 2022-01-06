@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "ModuleManager.h"
+#include "Modules/ModuleManager.h"
 
 #include "Entity.h"
 #include "EntityDef.h"
@@ -13,7 +13,7 @@
 #include "KBEngineArgs.h"
 #include "KBEDefine.h"
 #include "MemoryStream.h"
-#include "NetworkInterface.h"
+#include "NetworkInterfaceBase.h"
 #include "KBEPersonality.h"
 #include "Property.h"
 #include "ScriptModule.h"

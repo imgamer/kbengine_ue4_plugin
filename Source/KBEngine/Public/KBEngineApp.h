@@ -96,8 +96,12 @@ namespace KBEngine
 		CLIENT_TYPE ClientType() { return args_->clientType; }
 		const FString& LoginappHost() { return args_->host; }
 		uint16 LoginappPort() { return args_->port; }
-		uint32 GetRecvBufferMax() { return args_->RECV_BUFFER_MAX; }
-		uint32 GetSendBufferMax() {	return args_->SEND_BUFFER_MAX; }
+		uint32 GetTcpRecvBufferMax() { return args_->TCP_RECV_BUFFER_MAX; }
+		uint32 GetTcpSendBufferMax() {	return args_->TCP_SEND_BUFFER_MAX; }
+		
+		uint32 GetUdpRecvBufferMax() { return args_->UDP_RECV_BUFFER_MAX; }
+		uint32 GetUdpSendBufferMax() { return args_->UDP_SEND_BUFFER_MAX; }
+		bool IsForceDisableUDP() { return args_->forceDisableUDP; }
 
 	private:
 		// 取得初始化时的参数

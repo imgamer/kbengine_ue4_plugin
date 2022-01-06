@@ -1,7 +1,7 @@
 #include "KBEngineApp.h"
 #include "KBEnginePrivatePCH.h"
 #include <functional>
-#include "DateTime.h"
+#include "Misc/DateTime.h"
 #include "KBEMath.h"
 #include "KBEPersonality.h"
 #include "LoginApp.h"
@@ -120,7 +120,7 @@ namespace KBEngine
 	void KBEngineApp::Disconnect()
 	{
 		username_ = TEXT("");
-		password_ = TEXT("";)
+		password_ = TEXT("");
 		clientdatas_.Empty();
 
 		CloseLoginApp();
@@ -203,7 +203,8 @@ namespace KBEngine
 		}
 
 		auto baseappHost = loginApp_->BaseAppHost();
-		auto baseappPort = loginApp_->BaseAppPort();
+		auto baseappTcpPort = loginApp_->BaseAppTcpPort();
+		auto baseappUdpPort = loginApp_->BaseAppUdpPort();
 		baseappAccount_ = loginApp_->BaseAppAccount();
 
 		baseApp_ = new BaseApp(this);
@@ -211,7 +212,7 @@ namespace KBEngine
 		// 不能在这里销毁LoginApp，因为此时代码还在LoginApp的Process()层次
 		//CloseLoginApp();
 
-		baseApp_->Connect(baseappHost, baseappPort, std::bind(&KBEngineApp::OnConnectToBaseappCB, this, std::placeholders::_1));
+		baseApp_->Connect(baseappHost, baseappTcpPort, baseappUdpPort, std::bind(&KBEngineApp::OnConnectToBaseappCB, this, std::placeholders::_1));
 	}
 
 	void KBEngineApp::OnConnectToBaseappCB(int32 code)
@@ -366,8 +367,11 @@ namespace KBEngine
 		pMessages()->BaseappMessageImported(false);
 		EntityDef::EntityDefImported(false);
 
+		// TODO(shufeng): 添加跨服kcp协议支持
+		uint16 udpPort = 0;
+
 		acrossBaseApp_ = new BaseApp(this);
-		acrossBaseApp_->Connect(acrossBaseappHost_, acrossBaseappPort_, std::bind(&KBEngineApp::OnConnectAcrossBaseappCB, this, std::placeholders::_1));
+		acrossBaseApp_->Connect(acrossBaseappHost_, acrossBaseappPort_, udpPort, std::bind(&KBEngineApp::OnConnectAcrossBaseappCB, this, std::placeholders::_1));
 	}
 
 	void KBEngineApp::OnConnectAcrossBaseappCB(int32 code)

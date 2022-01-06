@@ -1,7 +1,9 @@
 #include "BaseApp.h"
 #include "KBEnginePrivatePCH.h"
 #include "KBEngineApp.h"
-#include "NetworkInterface.h"
+#include "NetworkInterfaceBase.h"
+#include "NetworkInterfaceTCP.h"
+#include "NetworkInterfaceKCP.h"
 #include "KBEDebug.h"
 #include "Bundle.h"
 #include "KBEPersonality.h"
@@ -20,7 +22,7 @@ namespace KBEngine
 		KBE_ASSERT(app_);
 
 		messages_ = app->pMessages();
-		messageReader_ = new MessageReader(this, messages_, KBEngineApp::app->GetRecvBufferMax());
+		messageReader_ = new MessageReader(this, messages_, KBEngineApp::app->GetTcpRecvBufferMax());
 	}
 
 	BaseApp::~BaseApp()
@@ -264,7 +266,7 @@ namespace KBEngine
 			{
 				posHasChanged = FVector::Dist(playerEntity->lastSyncPos_, position) > 0.1f;
 				dirHasChanged = FVector::Dist(playerEntity->lastSyncDir_, direction) > 0.1f;
-				bool needUpdate = this->PlayerNeedUpdate(playerEntity, posHasChanged || dirHasChanged);
+				needUpdate = this->PlayerNeedUpdate(playerEntity, posHasChanged || dirHasChanged);
 				if (needUpdate)
 				{
 					playerEntity->lastSyncPos_ = position;
@@ -352,7 +354,7 @@ namespace KBEngine
 			{
 				posHasChanged = FVector::Dist(entity->lastSyncPos_, position) > 0.1f;
 				dirHasChanged = FVector::Dist(entity->lastSyncDir_, direction) > 0.1f;
-				bool needUpdate = this->PlayerNeedUpdate(entity, posHasChanged || dirHasChanged);
+				needUpdate = this->PlayerNeedUpdate(entity, posHasChanged || dirHasChanged);
 				if (needUpdate)
 				{
 					entity->lastSyncPos_ = position;
@@ -397,7 +399,8 @@ namespace KBEngine
 			// 此时应该通知客户端掉线了
 			if (span.GetTotalSeconds() < 0)
 			{
-				KBE_ERROR(TEXT("BaseApp::SendTick: Receive appTick timeout!"));
+				KBE_ERROR(TEXT("BaseApp::SendTick: Receive appTick timeout!lastTickCBTime_(%s) - lastTicktime_(%s) < 0, span(%s)"), 
+					*lastTickCBTime_.ToString(), *lastTicktime_.ToString(), *span.ToString());
 				networkInterface_->Close();
 				return;
 			}
@@ -412,6 +415,8 @@ namespace KBEngine
 				bundle->NewMessage(messages_->GetMessage("Baseapp_onClientActiveTick"));
 				bundle->Send(networkInterface_);
 				delete bundle;
+				//KBE_ERROR(TEXT("shufeng --->>> BaseApp::SendTick: send message Baseapp_onClientActiveTick time:%s:%d"), 
+				//	*FDateTime::UtcNow().ToString(), FDateTime::UtcNow().GetMillisecond());
 			}
 
 			lastTicktime_ = FDateTime::UtcNow();
@@ -431,20 +436,30 @@ namespace KBEngine
 	void BaseApp::Disconnect()
 	{
 		host_ = TEXT("");
-		port_ = 0;
+		tcpPort_ = 0;
 		connectedCallbackFunc_ = nullptr;
 
 		ClearNetwork();
 	}
 
-	void BaseApp::Connect(const FString& host, uint16 port, ConnectCallbackFunc func)
+	void BaseApp::Connect(const FString& host, uint16 tcpPort, uint16 udpPort, ConnectCallbackFunc func)
 	{
 		KBE_ASSERT(!networkInterface_);
 		host_ = host;
-		port_ = port;
+		tcpPort_ = tcpPort;
+		baseappUdpPort_ = udpPort;
 		connectedCallbackFunc_ = func;
-		networkInterface_ = new NetworkInterface(messageReader_);
-		networkInterface_->ConnectTo(host, port, std::bind(&BaseApp::OnConnected, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+		uint16 connectPort = tcpPort_;
+		if (KBEngineApp::app->IsForceDisableUDP() || baseappUdpPort_ == 0)
+			networkInterface_ = new NetworkInterfaceTCP(messageReader_);
+		else
+		{
+			networkInterface_ = new NetworkInterfaceKCP(messageReader_);
+			connectPort = baseappUdpPort_;
+		}
+
+		networkInterface_->ConnectTo(host, connectPort, std::bind(&BaseApp::OnConnected, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	}
 
 	void BaseApp::OnConnected(const FString& host, uint16 port, bool success)
@@ -1629,7 +1644,7 @@ namespace KBEngine
 		float p = stream.ReadFloat();
 		float r = stream.ReadFloat();
 
-		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, y, p, r, -1, false);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, y, p, r, -1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_yp(MemoryStream& stream)
@@ -1639,7 +1654,7 @@ namespace KBEngine
 		float y = stream.ReadFloat();
 		float p = stream.ReadFloat();
 
-		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, y, p, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, false);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, y, p, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_yr(MemoryStream& stream)
@@ -1649,7 +1664,7 @@ namespace KBEngine
 		float y = stream.ReadFloat();
 		float r = stream.ReadFloat();
 
-		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, y, KBEDATATYPE_BASE::KBE_FLT_MAX, r, -1, false);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, y, KBEDATATYPE_BASE::KBE_FLT_MAX, r, -1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_pr(MemoryStream& stream)
@@ -1659,7 +1674,7 @@ namespace KBEngine
 		float p = stream.ReadFloat();
 		float r = stream.ReadFloat();
 
-		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, -1, false);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, -1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_y(MemoryStream& stream)
@@ -1668,7 +1683,7 @@ namespace KBEngine
 
 		float y = stream.ReadFloat();
 
-		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, y, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, false);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, y, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_p(MemoryStream& stream)
@@ -1677,7 +1692,7 @@ namespace KBEngine
 
 		float p = stream.ReadFloat();
 
-		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, false);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, -1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_r(MemoryStream& stream)
@@ -1686,7 +1701,7 @@ namespace KBEngine
 
 		float r = stream.ReadFloat();
 
-		UpdateVolatileData(eid, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, -1, false);
+		UpdateVolatileData(eid, FLT_MAX, FLT_MAX, FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, -1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_xz(MemoryStream& stream)
@@ -1696,7 +1711,7 @@ namespace KBEngine
 		float x = stream.ReadFloat();
 		float z = stream.ReadFloat();
 
-		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
+		UpdateVolatileData(eid, x, FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_xz_ypr(MemoryStream& stream)
@@ -1710,7 +1725,7 @@ namespace KBEngine
 		float p = stream.ReadFloat();
 		float r = stream.ReadFloat();
 
-		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, y, p, r, 1, false);
+		UpdateVolatileData(eid, x, FLT_MAX, z, y, p, r, 1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_xz_yp(MemoryStream& stream)
@@ -1723,7 +1738,7 @@ namespace KBEngine
 		float y = stream.ReadFloat();
 		float p = stream.ReadFloat();
 
-		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, y, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
+		UpdateVolatileData(eid, x, FLT_MAX, z, y, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_xz_yr(MemoryStream& stream)
@@ -1736,7 +1751,7 @@ namespace KBEngine
 		float y = stream.ReadFloat();
 		float r = stream.ReadFloat();
 
-		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, y, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 1, false);
+		UpdateVolatileData(eid, x, FLT_MAX, z, y, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_xz_pr(MemoryStream& stream)
@@ -1749,7 +1764,7 @@ namespace KBEngine
 		float p = stream.ReadFloat();
 		float r = stream.ReadFloat();
 
-		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, 1, false);
+		UpdateVolatileData(eid, x, FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, p, r, 1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_xz_y(MemoryStream& stream)
@@ -1761,7 +1776,7 @@ namespace KBEngine
 
 		float y = stream.ReadFloat();
 
-		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, y, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
+		UpdateVolatileData(eid, x, FLT_MAX, z, y, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_xz_p(MemoryStream& stream)
@@ -1773,7 +1788,7 @@ namespace KBEngine
 
 		float p = stream.ReadFloat();
 
-		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
+		UpdateVolatileData(eid, x, FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, p, KBEDATATYPE_BASE::KBE_FLT_MAX, 1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_xz_r(MemoryStream& stream)
@@ -1785,7 +1800,7 @@ namespace KBEngine
 
 		float r = stream.ReadFloat();
 
-		UpdateVolatileData(eid, x, KBEDATATYPE_BASE::KBE_FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 1, false);
+		UpdateVolatileData(eid, x, FLT_MAX, z, KBEDATATYPE_BASE::KBE_FLT_MAX, KBEDATATYPE_BASE::KBE_FLT_MAX, r, 1, false);
 	}
 
 	void BaseApp::Client_onUpdateData_xyz(MemoryStream& stream)
@@ -2024,6 +2039,8 @@ namespace KBEngine
 	void BaseApp::Client_onAppActiveTickCB()
 	{
 		lastTickCBTime_ = FDateTime::UtcNow();
+		//KBE_ERROR(TEXT("shufeng -->>>BaseApp::Client_onAppActiveTickCB SendTick callback: Receive appTick ccccccccccccccbbbbbbbbbbbbb!at time:%s:%d"), 
+		//	*FDateTime::UtcNow().ToString(), lastTickCBTime_.GetMillisecond());
 	}
 
 	void BaseApp::Client_onStreamDataStarted(int16 id, uint32 datasize, const FString& descr)
@@ -2096,6 +2113,8 @@ namespace KBEngine
 
 	void BaseApp::HandleMessage(const FString &name, MemoryStream *stream)
 	{
+		//KBE_ERROR(TEXT("shufeng--->>>BaseApp::HandleMessage MemoryStream *stream 1111:  message name (%s)! at time :%s: %d"), 
+		//	*name, *FDateTime::UtcNow().ToString(), FDateTime::UtcNow().GetMillisecond());
 		if (name == "Client_onHelloCB") {
 			Client_onHelloCB(*stream);
 		}
@@ -2367,6 +2386,9 @@ namespace KBEngine
 
 	void BaseApp::HandleMessage(const FString &name, const TArray<FVariant> &args)
 	{
+		//KBE_ERROR(TEXT("shufeng--->>>BaseApp::HandleMessage TArray<FVariant> 2222:  message name (%s) at time(%s:%d)!"), 
+		//	*name, *FDateTime::UtcNow().ToString(), FDateTime::UtcNow().GetMillisecond());
+
 		if (name == "Client_onCreatedProxies") {
 			uint64 rndUUID = args[0].GetValue<uint64>();
 			int32 eid = args[1].GetValue<int32>();

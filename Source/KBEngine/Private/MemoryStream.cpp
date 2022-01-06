@@ -1,6 +1,6 @@
 #include "MemoryStream.h"
 #include "KBEnginePrivatePCH.h"
-
+#include <string>
 
 namespace KBEngine
 {

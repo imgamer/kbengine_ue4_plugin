@@ -1,20 +1,21 @@
 #pragma once
-#include "KBEnginePrivatePCH.h"
 #include "MessageReader.h"
 
 namespace KBEngine
 {
 	class MessageReader;
-	class NetworkInterface;
+	class NetworkInterfaceBase;
 
-	class PacketReceiver : public FRunnable
+	class PacketReceiverBase : public FRunnable
 	{
+	protected:
+		const static int RECV_BUFFER_LENGTH = 65535;
 
 	public:
-		PacketReceiver(NetworkInterface* networkInterface, uint32 buffLength = 65535);
-		~PacketReceiver();
+		PacketReceiverBase(NetworkInterfaceBase* networkInterface, uint32 buffLength = RECV_BUFFER_LENGTH);
+		~PacketReceiverBase();
 
-		void Process(MessageReader& messageReader);
+		virtual void Process(MessageReader& messageReader);
 		void StartBackgroundRecv();
 		void WillClose() { willClose_ = true; }
 
@@ -24,7 +25,7 @@ namespace KBEngine
 		void DoThreadedWork();
 
 
-	private:
+	protected:
 		// 由于阻塞在socket中，所以这个接口可能会导致卡机，外部非测试理由别用
 		void StopBackgroundRecv();
 
@@ -32,10 +33,10 @@ namespace KBEngine
 		uint32 FreeWriteSpace();
 
 		// 子线程中调用：开始从Socket中读取数据
-		void BackgroundRecv();
+		virtual void BackgroundRecv() {};
 
-	private:
-		NetworkInterface* networkInterface_ = NULL;
+	protected:
+		NetworkInterfaceBase* networkInterface_ = NULL;
 
 		uint8* buffer_;
 		uint32 bufferLength_ = 0;

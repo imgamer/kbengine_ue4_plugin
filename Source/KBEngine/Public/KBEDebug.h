@@ -35,3 +35,19 @@ inline void PrintInteger64(int64 value)
 {
 	KBE_DISPLAY(TEXT("%s"), *FString::Printf(TEXT("\n%llu\n"), value));
 }
+
+// 从缓存的指定位置读取T类型的值。
+template <typename T>
+T read(const uint8* buffer, uint32 pos)
+{
+	// 把buffer当作数组首地址，buffer[pos]得到数组元素的值, 然后&取得地址，
+	// (T const *)把地址转为指定类型，然后*取值
+	T val = *((T const*)&buffer[pos]);
+
+	//EndianConvert(val);
+	return val;
+}
+
+
+// 以16进制从指定位置输出缓存的字节
+void hexlike(const uint8* buffer, uint32 startPos, uint32 size);

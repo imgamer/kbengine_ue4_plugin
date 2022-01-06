@@ -60,10 +60,10 @@ public:
 	bool syncPlayer = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 sendBufferMax = 32768;
+	int32 TCP_SEND_BUFFER_MAX = 32768;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 recvBufferMax = 65535;
+	int32 TCP_RECV_BUFFER_MAX = 65535;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool useAliasEntityID = true;
@@ -71,6 +71,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isOnInitCallPropertysSetMethods = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool forceDisableUDP = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int UDP_SEND_BUFFER_MAX = 256;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int UDP_RECV_BUFFER_MAX = 128;
 
 	KBEngine::KBEngineApp * pKBEApp = nullptr;
 

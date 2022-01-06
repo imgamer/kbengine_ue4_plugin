@@ -1,6 +1,6 @@
 #include "Bundle.h"
 #include "KBEnginePrivatePCH.h"
-#include "NetworkInterface.h"
+#include "NetworkInterfaceBase.h"
 
 namespace KBEngine
 {
@@ -80,7 +80,7 @@ namespace KBEngine
 		messageLength_ += v;
 	}
 
-	void Bundle::Send(NetworkInterface *networkInterface)
+	void Bundle::Send(NetworkInterfaceBase *networkInterface)
 	{
 		Fini(true);
 

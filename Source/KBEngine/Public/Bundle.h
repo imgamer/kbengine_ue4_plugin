@@ -5,7 +5,7 @@
 
 namespace KBEngine
 {
-	class NetworkInterface;
+	class NetworkInterfaceBase;
 
 	class KBENGINE_API Bundle
 	{
@@ -19,7 +19,7 @@ namespace KBEngine
 
 		void WriteMsgLength();
 
-		void Send(NetworkInterface *networkInterface);
+		void Send(NetworkInterfaceBase *networkInterface);
 
 		void CheckStream(int v);
 

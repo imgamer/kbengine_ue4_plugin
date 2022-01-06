@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #define EndianConvert(value)
 #define EndianConvertReverse(value)

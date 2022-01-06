@@ -32,10 +32,10 @@ namespace KBEngine
 		bool isOnInitCallPropertysSetMethods = true;
 
 		// 发送缓冲大小
-		uint32 SEND_BUFFER_MAX = 65535;
+		uint32 TCP_SEND_BUFFER_MAX = 65535;
 
 		// 接收缓冲区大小
-		uint32 RECV_BUFFER_MAX = 65535;
+		uint32 TCP_RECV_BUFFER_MAX = 65535;
 
 		// 心跳包发送间隔（间隔越短，认为断线的时间也越短）；单位：秒
 		// 如果为0，则不发送
@@ -46,7 +46,11 @@ namespace KBEngine
 		TArray<uint8> encryptedKey;
 
 		// 服务端与客户端的版本号以及协议MD5
-		FString clientVersion = "1.3.8";
+		FString clientVersion = "1.3.12";
 		FString clientScriptVersion = "0.1.0";
+
+		bool forceDisableUDP;
+		int UDP_SEND_BUFFER_MAX;
+		int UDP_RECV_BUFFER_MAX;
 	};
 }
