@@ -24,7 +24,10 @@ public:
 
 	~PacketReceiverKCP();
 
+	void Process(MessageReader& messageReader) override;
+
 protected:
+	// 废弃代码，kcp无需使用多线程
 	void BackgroundRecv() override;
 
 	uint32 CheckForSpace();

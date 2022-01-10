@@ -105,6 +105,7 @@ public:
 		s.Clear();
 		int32 bytesRead = 0;
 
+		opt_.socket->SetNonBlocking(false);	// 阻塞等待连接成功
 		KBE_DEBUG(TEXT("NetworkStatusKCPConnecting KCP connect to %s:%d"), *opt_.connectIP, opt_.connectPort);
 		if (opt_.socket->RecvFrom(s.Data(), s.Size(), bytesRead, *addr))
 		{
@@ -131,6 +132,7 @@ public:
 			connected_ = true;
 		}
 
+		opt_.socket->SetNonBlocking(true);
 		return 0;
 	};
 
