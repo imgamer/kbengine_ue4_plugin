@@ -68,7 +68,7 @@ void NetworkInterfaceKCP::OnConnected(ConnectState state)
 		addr_->SetPort(state.connectPort);
 
 		packetReceiver_ = CreatePacketReceiver();
-		packetReceiver_->StartBackgroundRecv();
+		//packetReceiver_->StartBackgroundRecv();
 		ChangeNetworkStatus(new Status_Connected);
 	}
 	else
@@ -148,9 +148,9 @@ bool NetworkInterfaceKCP::InitSocket(uint32 receiveBufferSize, uint32 sendBuffer
 			return false;
 		}
 
-		if (!socket_->SetNonBlocking(false))
+		if (!socket_->SetNonBlocking(true))
 		{
-			KBE_ERROR(TEXT("NetworkInterfaceKCP::InitSocket: SetNonBlocking(false) error: %d"), 
+			KBE_ERROR(TEXT("NetworkInterfaceKCP::InitSocket: SetNonBlocking(true) error: %d"), 
 				(int32)ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetLastErrorCode());
 
 			socketSubsystem_->DestroySocket(socket_);

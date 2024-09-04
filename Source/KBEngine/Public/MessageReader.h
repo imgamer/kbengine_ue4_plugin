@@ -36,6 +36,8 @@ namespace KBEngine
 
 		// 用于主线程处理数据
 		void Process();
+
+		void ProcessData(const uint8* datas, MessageLengthEx length);
 		
 		// 用于子线程写入数据
 		uint32 Write(const uint8* datas, MessageLengthEx length);

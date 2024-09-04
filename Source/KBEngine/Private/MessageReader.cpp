@@ -228,4 +228,9 @@ namespace KBEngine
 			}
 		}
 	}
+
+	void MessageReader::ProcessData(const uint8* datas, MessageLengthEx length)
+	{
+		Process_(datas, length);
+	}
 }

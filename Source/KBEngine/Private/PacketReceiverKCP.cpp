@@ -14,6 +14,7 @@ PacketReceiverKCP::~PacketReceiverKCP()
 		delete udpBuffer_;
 }
 
+// 废弃代码，kcp无需使用多线程
 void PacketReceiverKCP::BackgroundRecv() 
 {
 	if (!networkInterface_ || !networkInterface_->Valid())
@@ -79,6 +80,52 @@ void PacketReceiverKCP::BackgroundRecv()
 			}
 		}
 	}
+}
+
+void PacketReceiverKCP::Process(MessageReader & messageReader)
+{
+	if (!networkInterface_ || !networkInterface_->Valid())
+	{
+		breakThread_ = true;
+		return;
+	}
+
+	uint32 dataSize = 0;
+	while (networkInterface_->Socket()->HasPendingData(dataSize))
+	{
+		int32 bytesRead = 0;
+		if (networkInterface_->Socket()->RecvFrom(udpBuffer_, UDP_PACKET_LENTH, bytesRead, *remoteAddr_))
+		{
+			auto networkInterfaceKCP = (NetworkInterfaceKCP*)networkInterface_;
+			networkInterfaceKCP->NextTickKcpUpdate();
+
+			auto result = ikcp_input(networkInterfaceKCP->KCP(), (const char*)(udpBuffer_), bytesRead);
+			if (result < 0)
+			{
+				KBE_ERROR(TEXT("PacketReceiverKCP::BackgroundRecv ikcp_input error %d"), result);
+				//hexlike(buffer_, wpos_, bytesRead);
+				continue;
+			}
+			else
+			{
+				while (true)
+				{
+					result = ikcp_recv(networkInterfaceKCP->KCP(), (char*)(udpBuffer_), UDP_PACKET_LENTH);
+					if (result < 0)
+					{
+						//KBE_INFO(TEXT("PacketReceiverKCP::BackgroundRecv ikcp_recv result: %d, wpos_: %d, rpos_: %d"), result, wpos_, rpos_);
+						break;
+					}
+
+					if (result > 0)
+					{
+						messageReader.ProcessData(udpBuffer_, result);
+					}
+				}
+			}
+		}
+	}
+	//PacketReceiverBase::Process(messageReader);
 }
 
 uint32 PacketReceiverKCP::CheckForSpace()
