@@ -5,6 +5,8 @@
 #include "Containers/UnrealString.h"
 #include "MemoryStream.h"
 #include "KBEDebug.h"
+#include "HAL/PlatformMisc.h"
+
 
 namespace KBEngine
 {
@@ -77,7 +79,7 @@ protected:
 	bool connected_ = false;
 };
 
-class NetworkStatusKCPConnecting : public Status_Connecting
+class NetworkStatusKCPConnecting : public NetworkStatus
 {
 public:
 	const FString UDP_HELLO = TEXT("62a559f3fa7748bc22f8e0766019d498");
@@ -86,11 +88,25 @@ public:
 	NetworkStatusKCPConnecting(NetworkInterfaceBase::ConnectState& opt)
 	{
 		opt_ = opt;
-		thread_ = FRunnableThread::Create(this, *FString::Printf(TEXT("NetworkStatusKCPConnecting:%p"), this));
+
+		StartConnect();
 	};
 
-	// call by sub-thread
-	uint32 Run() override
+	void MainThreadProcess(NetworkInterfaceBase* networkInterface) override
+	{
+		CheckConnect();
+
+		if (connected_)
+			networkInterface->OnConnected(opt_);
+	}
+
+	uint32 GetConnID()
+	{
+		return connID_;
+	};
+
+private:
+	void StartConnect()
 	{
 		MemoryStream s;
 		s.WriteString(UDP_HELLO);
@@ -100,47 +116,78 @@ public:
 		addr->SetIp(*opt_.connectIP, bIsValid);
 
 		int32 sent = 0;
-		opt_.socket->SendTo(s.Data(), s.Length(), sent, *addr);
+		opt_.socket->SendTo(s.Data(), s.Length(), sent, *addr);	// socket 为非阻塞
 
-		s.Clear();
-		int32 bytesRead = 0;
+		startTime_ = FPlatformTime::Seconds();
+		connectCount_ += 1;
 
-		KBE_DEBUG(TEXT("NetworkStatusKCPConnecting KCP connect to %s:%d"), *opt_.connectIP, opt_.connectPort);
-		if (opt_.socket->RecvFrom(s.Data(), s.Size(), bytesRead, *addr))
+		KBE_INFO(TEXT("NetworkStatusKCPConnecting KCP connect to %s:%d"), *opt_.connectIP, opt_.connectPort);
+	};
+
+	void CheckConnect()
+	{
+		UINT32 DataSize;
+		if (opt_.socket->HasPendingData(DataSize))
 		{
-			s.WPos(bytesRead);
-			FString helloAck = s.ReadString();
-			FString versionString = s.ReadString();
-			uint32 connID = s.ReadUint32();
-			KBE_DEBUG(TEXT("NetworkStatusKCPConnecting: handshake success, helloAck(%s), versionString(%s), connID(%d)"), 
-				*helloAck, *versionString, connID);
-
-			if (helloAck != UDP_HELLO_ACK)
+			MemoryStream s;
+			int32 bytesRead = 0;
+			TSharedRef<FInternetAddr> addr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
+			if (opt_.socket->RecvFrom(s.Data(), s.Size(), bytesRead, *addr))
 			{
-				opt_.error = TEXT("failed to connect to '%s:%d'! receive hello-ack mismatch!");
-			}
-			else if (connID == 0)
-			{
-				opt_.error = TEXT("failed to connect! conv is 0!");
-			}
-			// TODO：验证 versionString 是否一致
+				s.WPos(bytesRead);
+				FString helloAck = s.ReadString();
+				FString versionString = s.ReadString();
+				uint32 connID = s.ReadUint32();
 
-			connID_ = connID;
+				KBE_INFO(TEXT("NetworkStatusKCPConnecting: handshake success, helloAck(%s), versionString(%s), connID(%d)"),
+					*helloAck, *versionString, connID);
+
+				if (helloAck != UDP_HELLO_ACK)
+				{
+					opt_.error = FString::Printf(TEXT("failed to connect to '%s:%d'! receive hello-ack mismatch!"), *opt_.connectIP, opt_.connectPort);
+				}
+				else if (connID == 0)
+				{
+					opt_.error = TEXT("failed to connect! conv is 0!");
+				}
+				// TODO：验证 versionString 是否一致
+
+				connID_ = connID;
+			}
 
 			// 无论连接成功与否，都标识已进行过连接
 			connected_ = true;
 		}
+		else
+		{
+			auto currTime = FPlatformTime::Seconds();
+			if (currTime - startTime_ > 15.0f)	// 超时失败，业务层需要进行处理
+			{
+				opt_.error = FString::Printf(TEXT("failed to connect to '%s:%d'!"), *opt_.connectIP, opt_.connectPort);
+				connected_ = true;
+				return;
+			}
 
-		return 0;
-	};
-
-	uint32 GetConnID()
-	{
-		return connID_;
+			if (currTime - startTime_ > 1 && connectCount_ < 1.5f)	// 短时间未收到服务端回复，再尝试一次
+			{
+				StartConnect();
+				connectCount_ += 1;
+				KBE_WARNING(TEXT("NetworkStatusKCPConnecting::CheckConnect:failed to connect to '%s:%d', try again"), *opt_.connectIP, opt_.connectPort);
+				return;
+			}
+		}
 	};
 
 private:
+	NetworkInterfaceBase::ConnectState opt_;
+
+	bool connected_ = false;
+
 	uint32 connID_ = 0;
+
+	double startTime_ = 0.0f;
+
+	uint8 connectCount_ = 0;
 
 };
 
