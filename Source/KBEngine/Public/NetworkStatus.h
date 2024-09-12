@@ -116,7 +116,7 @@ private:
 		addr->SetIp(*opt_.connectIP, bIsValid);
 
 		int32 sent = 0;
-		opt_.socket->SendTo(s.Data(), s.Length(), sent, *addr);	// socket 为非阻塞
+		opt_.socket->SendTo(s.Data(), s.Length(), sent, *addr);
 
 		startTime_ = FPlatformTime::Seconds();
 		connectCount_ += 1;
@@ -161,18 +161,19 @@ private:
 		else
 		{
 			auto currTime = FPlatformTime::Seconds();
-			if (currTime - startTime_ > 15.0f)	// 超时失败，业务层需要进行处理
-			{
-				opt_.error = FString::Printf(TEXT("failed to connect to '%s:%d'!"), *opt_.connectIP, opt_.connectPort);
-				connected_ = true;
-				return;
-			}
 
-			if (currTime - startTime_ > 1 && connectCount_ < 1.5f)	// 短时间未收到服务端回复，再尝试一次
+			if (currTime - startTime_ > 1.5f && connectCount_ < 2)	// 短时间内未收到服务端回复，再次尝试连接
 			{
 				StartConnect();
 				connectCount_ += 1;
 				KBE_WARNING(TEXT("NetworkStatusKCPConnecting::CheckConnect:failed to connect to '%s:%d', try again"), *opt_.connectIP, opt_.connectPort);
+				return;
+			}
+
+			if (currTime - startTime_ > 15.0f)	// 超时失败，业务层需要进行处理
+			{
+				opt_.error = FString::Printf(TEXT("failed to connect to '%s:%d'!"), *opt_.connectIP, opt_.connectPort);
+				connected_ = true;
 				return;
 			}
 		}
